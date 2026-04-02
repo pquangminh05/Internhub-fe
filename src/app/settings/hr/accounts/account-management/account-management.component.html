@@ -1,0 +1,225 @@
+<app-ui-page-header
+  title="Quản lý Tài khoản & Phân quyền"
+  subtitle="Thiết lập vai trò và quyền hạn truy cập hệ thống"
+>
+  <button
+    mat-flat-button
+    color="primary"
+    class="!rounded-xl !py-6 !px-6 shadow-lg shadow-primary-200"
+    (click)="openCreateUserDialog()"
+  >
+    <mat-icon class="mr-2">add</mat-icon>
+    <span class="font-semibold text-white">Thêm tài khoản mới</span>
+  </button>
+</app-ui-page-header>
+
+<!-- ══ Tab Navigation ══ -->
+<div class="flex items-center space-x-1 border-b border-gray-200 mb-6 px-2">
+  <button
+    (click)="activeTab = 'accounts'"
+    [class]="
+      activeTab === 'accounts'
+        ? 'border-primary-500 text-primary-600 bg-primary-50/30'
+        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+    "
+    class="px-6 py-3.5 text-sm font-bold border-b-2 transition-all flex items-center gap-2 rounded-t-lg"
+  >
+    <mat-icon class="scale-90" [class.text-primary-500]="activeTab === 'accounts'">people</mat-icon>
+    Quản lý tài khoản
+  </button>
+  <button
+    (click)="activeTab = 'permissions'"
+    [class]="
+      activeTab === 'permissions'
+        ? 'border-primary-500 text-primary-600 bg-primary-50/30'
+        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+    "
+    class="px-6 py-3.5 text-sm font-bold border-b-2 transition-all flex items-center gap-2 rounded-t-lg"
+  >
+    <mat-icon class="scale-90" [class.text-primary-500]="activeTab === 'permissions'"
+      >security</mat-icon
+    >
+    Bảng phân quyền (RBAC)
+  </button>
+</div>
+
+<app-ui-card [hasHeader]="true" paddingClass="p-0">
+  <!-- ══ Tab 1: Account Management ══ -->
+  <ng-container *ngIf="activeTab === 'accounts'">
+    <div card-header-title class="flex items-center space-x-2">
+      <mat-icon class="text-primary-500">group</mat-icon>
+      <span class="text-lg font-bold text-gray-800">Danh sách tài khoản hệ thống</span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-50">
+          <tr>
+            <th
+              class="px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-surface-100"
+            >
+              Người dùng
+            </th>
+            <th
+              class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-surface-100"
+            >
+              Vai trò
+            </th>
+            <th
+              class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-surface-100"
+            >
+              Phòng ban
+            </th>
+            <th
+              class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-surface-100"
+            >
+              Trạng thái
+            </th>
+            <th class="px-6 py-4 text-right border-b border-surface-100"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-surface-100">
+          <tr *ngFor="let user of users" class="hover:bg-surface-50/50 transition-colors">
+            <td class="px-8 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm"
+                >
+                  {{ user.name?.charAt(0) || 'U' }}
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-bold text-gray-800">{{ user.name }}</span>
+                  <span class="text-xs text-gray-400 font-medium">{{ user.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="px-2.5 py-1 rounded-md bg-surface-100 text-gray-600 text-[11px] font-bold uppercase tracking-wider"
+              >
+                {{ user.roleName }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-600 font-medium">{{
+                user.departmentName || '—'
+              }}</span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-2 h-2 rounded-full"
+                  [class.bg-green-500]="user.enabled"
+                  [class.bg-red-400]="!user.enabled"
+                ></div>
+                <span
+                  class="text-xs font-bold"
+                  [class.text-green-600]="user.enabled"
+                  [class.text-red-500]="!user.enabled"
+                >
+                  {{ user.enabled ? 'Đang hoạt động' : 'Bị khóa' }}
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button mat-icon-button class="text-gray-400 hover:text-primary-600">
+                <mat-icon class="scale-90">edit</mat-icon>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!isLoading && users.length === 0">
+            <td colspan="5" class="py-20 text-center">
+              <div class="flex flex-col items-center text-gray-400">
+                <mat-icon class="text-4xl h-10 w-10 mb-2">person_search</mat-icon>
+                <p class="font-medium text-sm">Không tìm thấy tài khoản nào</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- ══ Tab 2: RBAC Matrix ══ -->
+  <ng-container *ngIf="activeTab === 'permissions'">
+    <div card-header-title class="flex items-center space-x-2">
+      <mat-icon class="text-primary-500">security</mat-icon>
+      <span class="text-lg font-bold text-gray-800">Thiết lập Ma trận quyền hạn</span>
+    </div>
+
+    <div card-actions *ngIf="!isLoading && permissionMatrix">
+      <div class="bg-surface-50 p-1 rounded-xl border border-surface-100 scale-90 md:scale-100">
+        <mat-radio-group [(ngModel)]="selectedPermissionType" class="flex items-center space-x-1">
+          <mat-radio-button value="canCreate" class="modern-radio">Create</mat-radio-button>
+          <mat-radio-button value="canAccess" class="modern-radio">Read</mat-radio-button>
+          <mat-radio-button value="canEdit" class="modern-radio">Update</mat-radio-button>
+          <mat-radio-button value="canDelete" class="modern-radio">Delete</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading && permissionMatrix" class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead class="bg-surface-50">
+          <tr>
+            <th
+              class="sticky left-0 z-20 bg-surface-50 px-8 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-surface-100 min-w-[300px]"
+            >
+              Tính năng / Module
+            </th>
+            <th
+              *ngFor="let roleDef of roleDefinitions"
+              class="px-6 py-5 text-center text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-surface-100 min-w-[120px]"
+            >
+              {{ roleDef.name }}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-surface-50">
+          <ng-container *ngFor="let group of permissionMatrix!.groups; trackBy: trackByGroup">
+            <tr class="bg-surface-50/50">
+              <td
+                [attr.colspan]="roleDefinitions.length + 1"
+                class="px-8 py-3 text-[11px] font-bold text-primary-600 bg-primary-50/20 uppercase tracking-widest"
+              >
+                {{ group.name }}
+              </td>
+            </tr>
+            <tr
+              *ngFor="let feature of group.features; trackBy: trackByFeatureId"
+              class="hover:bg-surface-50/50 transition-colors group"
+            >
+              <td
+                class="sticky left-0 z-10 bg-white group-hover:bg-surface-50/80 px-8 py-4 text-sm font-semibold text-gray-700 border-r border-surface-50"
+              >
+                <div class="flex flex-col">
+                  <span class="group-hover:text-primary-600 transition-colors">{{
+                    feature.name
+                  }}</span>
+                  <span class="text-[10px] text-gray-400 font-mono">{{ feature.id }}</span>
+                </div>
+              </td>
+              <td
+                *ngFor="let roleDef of roleDefinitions; trackBy: trackByRoleId"
+                class="px-6 py-4 text-center"
+              >
+                <mat-checkbox
+                  color="primary"
+                  class="scale-110"
+                  [checked]="isPermissionEnabled(feature, roleDef.id, selectedPermissionType)"
+                  (change)="onPermissionChange(feature, roleDef, selectedPermissionType, $event)"
+                ></mat-checkbox>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- ══ Global Loading State ══ -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center p-20 space-y-4">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p class="text-sm text-gray-400 font-medium animate-pulse">Đang tải dữ liệu hệ thống...</p>
+  </div>
+</app-ui-card>

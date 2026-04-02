@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>Thêm tài khoản mới</h2>
+<mat-dialog-content>
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="fill">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" required minlength="3" maxlength="50">
+      <mat-error *ngIf="userForm.get('name')?.invalid">{{ getErrorMessage('name') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" required>
+      <mat-error *ngIf="userForm.get('email')?.invalid">{{ getErrorMessage('email') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="roleId" required>
+        <mat-option *ngFor="let role of roles" [value]="role.id">
+          {{ role.name }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="userForm.get('roleId')?.invalid">{{ getErrorMessage('roleId') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Department</mat-label>
+      <mat-select formControlName="departmentId" required>
+        <mat-option *ngFor="let department of departments" [value]="department.id">
+          {{ department.name }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="userForm.get('departmentId')?.invalid">{{ getErrorMessage('departmentId') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone" required pattern="^\d{10,15}$">
+      <mat-error *ngIf="userForm.get('phone')?.invalid">{{ getErrorMessage('phone') }}</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="userForm.invalid">Tạo tài khoản</button>
+</mat-dialog-actions>

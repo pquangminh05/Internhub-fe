@@ -1,0 +1,158 @@
+
+<main class="p-7 pb-20">
+
+  <!-- Page header -->
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <h1 class="text-[26px] font-bold tracking-tight text-gray-900">
+        Thư viện Kỹ năng
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Quản lý bộ tiêu chuẩn đánh giá năng lực dùng chung toàn hệ thống.
+      </p>
+    </div>
+
+    <button
+      (click)="openCreateMaster()"
+      class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors">
+      <span class="icon icon-master"></span>
+      Thêm Master Tag
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="relative mb-5">
+    <input
+      [(ngModel)]="search"
+      type="text"
+      placeholder="Tìm kiếm kỹ năng..."
+      class="w-full h-11 pl-4 pr-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+    />
+  </div>
+
+  <!-- Master list -->
+  <div class="space-y-3">
+
+    <div *ngFor="let master of filteredMasters()"
+         class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+
+      <!-- Master header -->
+      <div class="flex items-center gap-2 px-4 py-3.5">
+
+        <button (click)="master.open = !master.open">
+          {{ master.open ? '▾' : '▸' }}
+        </button>
+
+        <span class="font-semibold text-[15px] text-gray-900">
+          {{ master.name }}
+        </span>
+
+        <span class="text-sm text-gray-400">
+          ({{ master.children?.length || 0 }} kỹ năng)
+        </span>
+
+        <div class="ml-auto flex gap-2">
+          <button (click)="openCreateSub(master)"
+                  class="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
+            <span class="icon icon-plus"></span>
+            Thêm Sub-tag
+          </button>
+
+          <button (click)="openEdit(master)"
+                  class="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
+            <span class="icon icon-edit"></span>
+            Sửa
+          </button>
+
+          <button (click)="deleteMaster(master)"
+                  class="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
+            <span class="icon icon-trash"></span>
+            Xóa
+          </button>
+        </div>
+      </div>
+
+      <div class="px-12 pb-3 text-sm text-gray-400">
+        Trọng số mặc định: {{ master.defaultWeight }}
+      </div>
+
+      <!-- Sub list -->
+      <div *ngIf="master.open">
+
+        <div *ngFor="let sub of master.children"
+             class="border-t border-gray-100">
+
+          <div class="flex items-center pl-12 pr-4 py-3">
+
+            <span class="text-sm font-semibold text-gray-800">
+              {{ sub.name }}
+            </span>
+
+            <span class="ml-3 text-xs text-gray-400">
+              (Weight: {{ sub.defaultWeight }})
+            </span>
+
+            <div class="ml-auto flex gap-2">
+              <button (click)="openEdit(master, sub)"
+                      class="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
+                <span class="icon icon-edit"></span>
+                Sửa
+              </button>
+
+              <button (click)="deleteSub(master, sub)"
+                      class="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
+                <span class="icon icon-trash"></span>
+                Xóa
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div *ngIf="!master.children || master.children.length === 0"
+             class="border-t border-gray-100 px-12 py-4 text-sm text-gray-400 italic">
+          Chưa có kỹ năng nào.
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL -->
+  <div *ngIf="showModal"
+       class="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+    <div class="bg-white w-[400px] rounded-xl p-6">
+
+      <h2 class="text-lg font-bold mb-4">
+        {{ isEdit ? 'Chỉnh sửa kỹ năng' : 'Thêm kỹ năng' }}
+      </h2>
+
+      <div class="space-y-3">
+        <input [(ngModel)]="form.name"
+               placeholder="Tên kỹ năng"
+               class="w-full border rounded px-3 py-2" />
+
+        <input [(ngModel)]="form.defaultWeight"
+               type="number"
+               placeholder="Trọng số"
+               class="w-full border rounded px-3 py-2" />
+      </div>
+
+      <div class="flex justify-end gap-2 mt-5">
+        <button (click)="showModal=false"
+                class="px-4 py-2 border rounded">
+          Hủy
+        </button>
+
+        <button (click)="save()"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Lưu
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</main>

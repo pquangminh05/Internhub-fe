@@ -1,0 +1,147 @@
+<div class="space-y-8">
+  <app-ui-page-header
+    title="Dashboard Thực tập sinh"
+    [subtitle]="dashboardData ? 'Chào mừng bạn, ' + dashboardData.positionName : 'Đang tải...'"
+  >
+    <button mat-stroked-button class="!rounded-xl">
+      <mat-icon class="mr-2">download</mat-icon> Xuất báo cáo
+    </button>
+  </app-ui-page-header>
+
+  <!-- Loading & Error States -->
+  <app-ui-card *ngIf="isLoading" paddingClass="p-20">
+    <div class="flex flex-col items-center justify-center space-y-4">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="text-sm text-gray-400 font-medium">Đang tải dữ liệu dashboard...</p>
+    </div>
+  </app-ui-card>
+
+  <app-ui-card *ngIf="error" paddingClass="p-10" class="border-danger/20 bg-danger/5">
+    <div class="flex items-center space-x-3 text-danger">
+      <mat-icon>error_outline</mat-icon>
+      <p class="font-semibold">{{ error }}</p>
+    </div>
+  </app-ui-card>
+
+  <div *ngIf="!isLoading && !error && dashboardData" class="flex flex-col space-y-8">
+    <!-- 1. Overview Card (Đưa lên đầu và chiếm trọn 1 hàng) -->
+    <app-ui-card title="Tổng quan Thực tập" [hasHeader]="true">
+      <mat-icon card-icon class="text-primary-500">assignment_ind</mat-icon>
+
+      <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 bg-surface-50 rounded-2xl">
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Vị trí</p>
+            <p class="text-sm font-bold text-gray-800">{{ dashboardData.positionName }}</p>
+          </div>
+          <div class="p-4 bg-surface-50 rounded-2xl">
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Mentor</p>
+            <p class="text-sm font-bold text-gray-800">{{ dashboardData.mentorName }}</p>
+          </div>
+          <div class="lg:col-span-2 space-y-3 p-4 border border-surface-100 rounded-2xl">
+            <div class="flex justify-between items-end">
+              <span class="text-sm font-bold text-gray-700">Tiến độ thực tập</span>
+              <span class="text-2xl font-black text-primary-600"
+                >{{ dashboardData.daysRemaining }}
+                <small class="text-xs text-gray-400 font-medium">ngày còn lại</small></span
+              >
+            </div>
+            <mat-progress-bar
+              class="!h-3 !rounded-full"
+              mode="determinate"
+              [value]="
+                dashboardData.daysRemaining > 0
+                  ? 100 - (dashboardData.daysRemaining / 90) * 100
+                  : 100
+              "
+            ></mat-progress-bar>
+          </div>
+        </div>
+      </div>
+    </app-ui-card>
+
+    <!-- 2. Tasks Card -->
+    <app-ui-card title="Nhiệm vụ của tôi" [hasHeader]="true" paddingClass="p-0">
+      <mat-icon card-icon class="text-warning">list_alt</mat-icon>
+
+      <div *ngIf="dashboardData.tasks.length === 0" class="p-10 text-center">
+        <p class="text-gray-400 italic">Hiện chưa có nhiệm vụ nào được giao.</p>
+      </div>
+
+      <div class="divide-y divide-surface-50">
+        <div
+          *ngFor="let task of dashboardData.tasks"
+          class="p-6 hover:bg-surface-50/50 transition-colors"
+        >
+          <div class="flex items-start justify-between mb-2">
+            <h4 class="font-bold text-gray-800">{{ task.title }}</h4>
+            <span
+              [class]="
+                'px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ' +
+                getTaskStatusClass(task.status)
+              "
+            >
+              {{ task.status }}
+            </span>
+          </div>
+          <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ task.description }}</p>
+          <div
+            class="flex items-center text-xs font-medium"
+            [class.text-danger]="isOverdue(task.deadline)"
+            [class.text-gray-400]="!isOverdue(task.deadline)"
+          >
+            <mat-icon class="!text-sm mr-1">event</mat-icon>
+            Hạn chót: {{ formatDate(task.deadline) }}
+            <span *ngIf="isOverdue(task.deadline)" class="ml-2 flex items-center font-bold">
+              (Quá hạn)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div card-footer>
+        <button mat-button color="primary" class="!font-bold">Xem tất cả nhiệm vụ</button>
+      </div>
+    </app-ui-card>
+
+    <!-- 3. Target Skills Card -->
+    <app-ui-card title="Kỹ năng mục tiêu" [hasHeader]="true">
+      <mat-icon card-icon class="text-success">psychology</mat-icon>
+      <div *ngIf="dashboardData.targetSkills.length === 0" class="text-center py-6">
+        <p class="text-sm text-gray-400 italic">Chưa xác định kỹ năng mục tiêu.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span
+          *ngFor="let skill of dashboardData.targetSkills"
+          class="px-3 py-1.5 bg-success/10 text-success text-xs font-bold rounded-lg border border-success/20"
+        >
+          {{ skill.name }}
+        </span>
+      </div>
+    </app-ui-card>
+
+    <!-- 4. Roadmap Card (Đưa xuống cuối cùng) -->
+    <app-ui-card title="Lộ trình Thực tập" [hasHeader]="true">
+      <mat-icon card-icon class="text-info">map</mat-icon>
+      <div *ngIf="dashboardData.roadmap.length === 0" class="py-6 text-center">
+        <p class="text-gray-400 italic">Lộ trình thực tập chưa được xác định.</p>
+      </div>
+
+      <div
+        class="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-100"
+      >
+        <div *ngFor="let milestone of dashboardData.roadmap; let i = index" class="relative group">
+          <div
+            class="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white bg-primary-500 shadow-sm z-10 group-hover:scale-125 transition-transform"
+          ></div>
+          <div>
+            <h4 class="font-bold text-gray-800">
+              {{ milestone.orderIndex }}. {{ milestone.title }}
+            </h4>
+            <p class="text-sm text-gray-500">{{ milestone.description }}</p>
+          </div>
+        </div>
+      </div>
+    </app-ui-card>
+  </div>
+</div>

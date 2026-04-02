@@ -1,0 +1,125 @@
+/* ===== Status Badges ===== */
+.task-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-todo {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-inprogress {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.status-submitted {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.status-reviewed {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.status-rejected {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+/* ===== Submit Button ===== */
+.submit-btn {
+  padding: 5px 14px;
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.submit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.submit-btn:active {
+  background-color: #1e40af;
+}
+
+/* ===== Upload Dropzone ===== */
+.upload-dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
+}
+
+.upload-dropzone:hover {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.upload-dropzone.dragover {
+  border-color: #2563eb;
+  background-color: #dbeafe;
+  transform: scale(1.01);
+}
+
+/* ===== Modal Animation ===== */
+.modal-enter {
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.drawer-anim-right {
+  animation: drawerSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Custom Scrollbar sync with interns.css */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-surface-50;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-surface-200 rounded-full;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface-300;
+}

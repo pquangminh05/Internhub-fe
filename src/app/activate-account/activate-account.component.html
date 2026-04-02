@@ -1,0 +1,23 @@
+<div class="activate-account-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Account Activation</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="activation-content">
+      <div *ngIf="activationStatus === 'pending'" class="status-pending">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <p>{{ message }}</p>
+      </div>
+      <div *ngIf="activationStatus === 'success'" class="status-success">
+        <mat-icon color="primary">check_circle</mat-icon>
+        <p>{{ message }}</p>
+        <button mat-raised-button color="primary" (click)="goToLogin()">Go to Login</button>
+      </div>
+      <div *ngIf="activationStatus === 'failure'" class="status-failure">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ message }}</p>
+        <button mat-raised-button color="accent" (click)="goToLogin()">Go to Login</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

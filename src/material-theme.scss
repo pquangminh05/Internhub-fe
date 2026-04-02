@@ -1,0 +1,91 @@
+
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+// Define a custom theme using Material 3
+// We'll use the azure-palette as a base and customize the system variables in styles.css if needed
+// or use the theme mixin directly.
+
+html {
+  height: 100%;
+  
+  // Angular Material 3 Theme Configuration
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: -1,
+  ));
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+
+// Global overrides to force the exact Azure Blue (#2B59FF) for Material Components
+:root {
+  --mdc-filled-button-container-color: #2B59FF;
+  --mdc-flat-button-label-text-color: #2B59FF;
+  --mat-sys-primary: #2B59FF;
+  --mat-sys-on-primary: white;
+  --mat-sys-primary-container: #dbeafe;
+  --mat-sys-on-primary-container: #1e3a8a;
+  --mat-checkbox-selected-icon-color: #2B59FF;
+  --mat-checkbox-selected-hover-state-layer-color: rgba(43, 89, 255, 0.04);
+  --mat-checkbox-selected-focus-state-layer-color: rgba(43, 89, 255, 0.12);
+  --mat-checkbox-selected-pressed-state-layer-color: rgba(43, 89, 255, 0.12);
+}
+
+.snackbar-success {
+  background-color: #10B981 !important;
+  color: white !important;
+}
+
+.snackbar-error {
+  background-color: #EF4444 !important;
+  color: white !important;
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
+
+.snackbar-success {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.snackbar-error {
+  background-color: #F44336 !important;
+  color: white !important;
+}
+
+.snackbar-warn {
+  background-color: #FFC107 !important;
+  color: black !important;
+}

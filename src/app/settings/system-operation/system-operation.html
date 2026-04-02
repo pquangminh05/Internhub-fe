@@ -1,0 +1,152 @@
+<div class="max-w-[1400px] mx-auto px-4 py-5 sm:px-6 sm:py-8 space-y-8 animate-fade-in">
+  <app-ui-page-header
+    title="Vận hành Hệ thống"
+    subtitle="Thiết lập chu kỳ đánh giá và điểm chuẩn (Benchmark) năng lực cho toàn hệ thống"
+  >
+    <button
+      (click)="saveSettings()"
+      class="flex items-center gap-2 bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition shadow-lg shadow-blue-100"
+    >
+      <mat-icon class="!text-lg">save</mat-icon>
+      Lưu cấu hình
+    </button>
+  </app-ui-page-header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Cấu hình Chu kỳ Đánh giá -->
+    <app-ui-card
+      paddingClass="p-0"
+      title="Chu kỳ Đánh giá"
+      subtitle="Quy định thời điểm thực hiện đánh giá định kỳ"
+    >
+      <div class="p-6 space-y-6">
+        <div>
+          <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 block"
+            >Loại chu kỳ</label
+          >
+          <select
+            [(ngModel)]="config.cycleType"
+            class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-blue-500 transition-all outline-none"
+          >
+            <option value="MONTHLY">Hàng tháng (Monthly)</option>
+            <option value="QUARTERLY">Hàng quý (Quarterly)</option>
+            <option value="END_OF_TERM">Cuối kỳ thực tập (End of Internship)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 block"
+              >Ngày bắt đầu đánh giá</label
+            >
+            <input
+              type="number"
+              [(ngModel)]="config.startDay"
+              min="1"
+              max="31"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-blue-500 transition-all outline-none"
+              placeholder="VD: 25"
+            />
+          </div>
+          <div>
+            <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 block"
+              >Thời hạn hoàn thành (Ngày)</label
+            >
+            <input
+              type="number"
+              [(ngModel)]="config.durationDays"
+              min="1"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-blue-500 transition-all outline-none"
+              placeholder="VD: 5"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+          <mat-icon class="text-blue-500 !text-xl">info_outline</mat-icon>
+          <p class="text-xs text-blue-700 leading-relaxed">
+            Hệ thống sẽ tự động khởi tạo đợt đánh giá và gửi thông báo nhắc nhở cho Mentor/Manager
+            khi đến chu kỳ.
+          </p>
+        </div>
+      </div>
+    </app-ui-card>
+
+    <!-- Điểm chuẩn Năng lực (Benchmark) -->
+    <app-ui-card
+      paddingClass="p-0"
+      title="Benchmark Năng lực"
+      subtitle="Thiết lập ngưỡng điểm đánh giá (Thang điểm 10)"
+    >
+      <div class="p-6 space-y-6">
+        <div class="space-y-4">
+          <div
+            class="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100"
+          >
+            <div>
+              <p class="text-sm font-bold text-emerald-800">Ngưỡng Xuất sắc (Excellent)</p>
+              <p class="text-[10px] text-emerald-600 font-medium">
+                Đủ điều kiện xét tuyển chính thức hoặc khen thưởng
+              </p>
+            </div>
+            <div class="w-24">
+              <input
+                type="number"
+                [(ngModel)]="config.benchmark.excellent"
+                step="0.1"
+                class="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-center font-bold text-emerald-700 outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
+          </div>
+
+          <div
+            class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100"
+          >
+            <div>
+              <p class="text-sm font-bold text-blue-800">Ngưỡng Đạt (Pass)</p>
+              <p class="text-[10px] text-blue-600 font-medium">
+                Hoàn thành yêu cầu cơ bản của chương trình
+              </p>
+            </div>
+            <div class="w-24">
+              <input
+                type="number"
+                [(ngModel)]="config.benchmark.pass"
+                step="0.1"
+                class="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-center font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+          </div>
+
+          <div
+            class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100"
+          >
+            <div>
+              <p class="text-sm font-bold text-red-800">Ngưỡng Cảnh báo (Warning)</p>
+              <p class="text-[10px] text-red-600 font-medium">
+                Cần sự can thiệp hoặc hỗ trợ từ Mentor/HR
+              </p>
+            </div>
+            <div class="w-24">
+              <input
+                type="number"
+                [(ngModel)]="config.benchmark.warning"
+                step="0.1"
+                class="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-center font-bold text-red-700 outline-none focus:ring-2 focus:ring-red-500/20"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-semibold text-gray-700"
+              >Tự động áp dụng trọng số năng lực</label
+            >
+            <mat-slide-toggle color="primary" [(ngModel)]="config.useWeights"></mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+    </app-ui-card>
+  </div>
+</div>

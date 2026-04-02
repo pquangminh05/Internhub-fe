@@ -1,0 +1,135 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Hồ sơ Intern</h1>
+      <p class="text-sm text-gray-500 mt-1">Quản lý danh sách thực tập sinh</p>
+    </div>
+    <div class="flex gap-2">
+      <!-- Lọc phòng ban -->
+      <select
+        [(ngModel)]="selectedDepartmentId"
+        (ngModelChange)="onFilterChange()"
+        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option [ngValue]="null">Tất cả phòng ban</option>
+        @for (dept of departments; track dept.id) {
+          <option [ngValue]="dept.id">{{ dept.name }}</option>
+        }
+      </select>
+      <!-- Lọc trường đại học -->
+      <select
+        [(ngModel)]="selectedUniversityId"
+        (ngModelChange)="onFilterChange()"
+        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option [ngValue]="null">Tất cả trường ĐH</option>
+        @for (uni of universities; track uni.id) {
+          <option [ngValue]="uni.id">{{ uni.name }}</option>
+        }
+      </select>
+      <!-- Nút xuất nhóm Excel -->
+      <button
+        (click)="exportGroup()"
+        [disabled]="isExportingGroup"
+        class="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        {{ isExportingGroup ? 'Đang xuất...' : 'Xuất Excel (nhóm)' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="flex justify-center items-center py-20">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (errorMsg) {
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm mb-4">
+      {{ errorMsg }}
+    </div>
+  }
+
+  <!-- Bảng danh sách -->
+  @if (!isLoading && filteredProfiles.length > 0) {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Họ tên</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Email</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Trường ĐH</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Vị trí</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Phòng ban</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Mentor</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Trạng thái</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-600">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (p of filteredProfiles; track p.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3 font-medium text-gray-900">{{ p.name }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ p.email }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ p.universityName ?? '—' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ p.positionName ?? '—' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ p.departmentName ?? '—' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ p.mentorName ?? '—' }}</td>
+                <td class="px-4 py-3">
+                  <span [class]="getStatusClass(p.status)">{{ p.status }}</span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <button
+                    (click)="exportIndividual(p.id, p.name)"
+                    [disabled]="exportingId === p.id"
+                    title="Xuất báo cáo Excel"
+                    class="inline-flex items-center gap-1 text-green-700 hover:text-green-900 disabled:text-gray-400 text-xs font-medium px-2 py-1 rounded border border-green-300 hover:bg-green-50 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3.5 w-3.5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    {{ exportingId === p.id ? '...' : 'Excel' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+        Hiển thị {{ filteredProfiles.length }} / {{ profiles.length }} thực tập sinh
+      </div>
+    </div>
+  }
+
+  @if (!isLoading && filteredProfiles.length === 0 && !errorMsg) {
+    <div class="text-center py-20 text-gray-400">
+      <p class="text-lg">Không có dữ liệu</p>
+    </div>
+  }
+</div>

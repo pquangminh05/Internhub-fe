@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-gray-100 flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow-sm py-4">
+    <div class="container mx-auto px-6 flex items-center justify-center">
+      <img src="assets/images/interhub.jpg" alt="InternHub Logo" class="h-8 w-auto" />
+      <span class="text-2xl font-bold text-gray-900 ml-3">InternHub</span>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-grow flex items-center justify-center p-6">
+    <div class="bg-white shadow-lg rounded-lg flex flex-col md:flex-row max-w-4xl w-full">
+      <!-- Left Column: Login Form -->
+      <div class="p-8 md:w-1/2 flex flex-col justify-center">
+        <button
+          class="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mb-4"
+        >
+          <img class="h-5 w-5 mr-2" src="assets/images/google-icon.png" alt="Google logo" />
+          Đăng nhập bằng Google
+        </button>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <div class="relative mb-4">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                class="h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="pl-10 pr-3 py-2 block w-full border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="Nhập địa chỉ email của bạn"
+            />
+          </div>
+          <div
+            *ngIf="
+              loginForm.get('email')?.invalid &&
+              (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)
+            "
+            class="text-red-500 text-xs mt-1 mb-2"
+          >
+            <div *ngIf="loginForm.get('email')?.errors?.['required']">Email là bắt buộc.</div>
+            <div *ngIf="loginForm.get('email')?.errors?.['email']">Email không hợp lệ.</div>
+          </div>
+
+          <div class="relative mb-6">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                class="h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="pl-10 pr-3 py-2 block w-full border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="Nhập mật khẩu của bạn"
+            />
+          </div>
+          <div
+            *ngIf="
+              loginForm.get('password')?.invalid &&
+              (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)
+            "
+            class="text-red-500 text-xs mt-1 mb-2"
+          >
+            <div *ngIf="loginForm.get('password')?.errors?.['required']">Mật khẩu là bắt buộc.</div>
+            <div *ngIf="loginForm.get('password')?.errors?.['incorrectCredentials']">
+              {{ loginForm.get('password')?.errors?.['incorrectCredentials'] }}
+            </div>
+          </div>
+
+          <div *ngIf="loginForm.hasError('connectionLost')" class="text-red-500 text-xs mt-1 mb-2">
+            {{ loginForm.errors?.['connectionLost'] }}
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="loginForm.invalid"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Đăng nhập
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Column: Welcome Message -->
+      <div class="p-8 md:w-1/2 bg-gray-50 rounded-r-lg flex flex-col justify-center">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Chào mừng đến với InternHub</h2>
+        <p class="text-gray-600 mb-4">
+          InternHub là một nền tảng quản lý thực tập hoàn toàn khác biệt. Được xây dựng trên cấu
+          trúc dữ liệu tiên tiến, hệ thống cho phép bạn thiết lập hồ sơ và theo dõi mọi tương tác
+          trong mạng lưới thực tập sinh của mình chỉ trong vài phút, với dữ liệu luôn được cập nhật
+          theo thời gian thực.
+        </p>
+        <p class="text-gray-600 mb-4">
+          Bạn sẽ có toàn quyền tùy chỉnh và xây dựng quy trình quản lý thực tập chính xác theo cách
+          mình mong muốn, thay vì phải gò bó trong những khuôn mẫu cũ kỹ.
+        </p>
+        <p class="text-gray-600 font-semibold">Hãy bắt đầu ngay hôm nay.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 py-4 text-center text-gray-500 text-sm">
+    <p>&copy; 2026 InternHub. All rights reserved.</p>
+  </footer>
+</div>

@@ -1,0 +1,290 @@
+<div class="max-w-[1400px] mx-auto px-4 py-5 sm:px-6 sm:py-8 space-y-8 animate-fade-in">
+  <app-ui-page-header
+    title="Đối tác Đại học"
+    subtitle="Quản lý danh sách các trường Đại học và thông tin đầu mối liên hệ"
+  >
+    <button
+      mat-flat-button
+      color="primary"
+      class="!rounded-xl !px-6 !py-6 shadow-xl shadow-primary-100"
+      (click)="openAddModal()"
+    >
+      <mat-icon class="mr-2">add</mat-icon>
+      <span class="font-bold text-white">Thêm trường mới</span>
+    </button>
+  </app-ui-page-header>
+
+  <app-ui-card paddingClass="p-0">
+    <!-- TOOLBAR -->
+    <div class="flex items-center justify-between gap-4 px-5 py-4 border-b border-gray-100">
+      <div class="relative flex-1 max-w-sm">
+        <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 !text-lg"
+          >search</mat-icon
+        >
+        <input
+          [(ngModel)]="searchQuery"
+          (input)="applyFilter()"
+          placeholder="Tìm tên trường, viết tắt hoặc người liên hệ..."
+          class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:bg-white focus:border-primary-100 focus:ring-4 focus:ring-primary-50 transition-all"
+        />
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="overflow-x-auto">
+      <div *ngIf="isLoading" class="p-20 flex flex-col items-center justify-center space-y-4">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p class="text-[10px] font-black text-gray-400 tracking-widest uppercase">
+          Đang tải dữ liệu...
+        </p>
+      </div>
+
+      <table mat-table [dataSource]="filtered" *ngIf="!isLoading" class="w-full">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="!px-5 !py-4 !text-[10px] !font-black !text-gray-400 uppercase tracking-widest"
+          >
+            Trường Đại học
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5">
+            <div class="font-bold text-gray-800 text-sm">{{ row.name }}</div>
+            <div class="text-[10px] text-gray-400 font-medium mt-0.5 truncate max-w-[200px]">
+              {{ row.address }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Short Name -->
+        <ng-container matColumnDef="shortName">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="!px-4 !py-4 !text-[10px] !font-black !text-gray-400 uppercase tracking-widest text-center"
+          >
+            Viết tắt
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-4 !py-5 text-center">
+            <span
+              class="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-200 uppercase"
+            >
+              {{ row.shortName }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Contact Column -->
+        <ng-container matColumnDef="contact">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="!px-4 !py-4 !text-[10px] !font-black !text-gray-400 uppercase tracking-widest"
+          >
+            Đầu mối liên hệ
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-4 !py-5">
+            <div class="text-xs font-bold text-gray-700">{{ row.contactPerson }}</div>
+            <div class="flex items-center space-x-3 mt-1 text-[10px] text-gray-400">
+              <span class="flex items-center"
+                ><mat-icon class="!text-[12px] !w-3 !h-3 mr-1">call</mat-icon
+                >{{ row.contactPhone }}</span
+              >
+              <span class="flex items-center"
+                ><mat-icon class="!text-[12px] !w-3 !h-3 mr-1">mail</mat-icon
+                >{{ row.contactEmail }}</span
+              >
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="!px-5 !py-4 !text-[10px] !font-black !text-gray-400 uppercase tracking-widest text-right"
+          >
+            Thao tác
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5 text-right space-x-1">
+            <button
+              mat-icon-button
+              (click)="openEditModal(row)"
+              class="text-gray-400 hover:text-primary-500 transition-colors"
+            >
+              <mat-icon class="!text-lg">edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              (click)="openDeleteModal(row)"
+              class="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <mat-icon class="!text-lg">delete_outline</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          class="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0"
+        ></tr>
+      </table>
+    </div>
+  </app-ui-card>
+
+  <!-- FORM DRAWER -->
+  <div
+    *ngIf="isFormOpen"
+    class="fixed inset-0 z-[49] bg-black/10 backdrop-blur-sm"
+    (click)="closeForm()"
+  ></div>
+  <div
+    *ngIf="isFormOpen"
+    class="fixed top-0 right-0 h-screen w-full max-w-md bg-white shadow-2xl z-[50] border-l border-gray-100 flex flex-col anim-slideright"
+  >
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-900">
+        {{ isEditMode ? 'Chỉnh sửa' : 'Thêm mới' }} Đối tác
+      </h2>
+      <button (click)="closeForm()" mat-icon-button><mat-icon>close</mat-icon></button>
+    </div>
+
+    <form [formGroup]="univForm" class="flex-1 overflow-y-auto p-6 space-y-6">
+      <div>
+        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+          >Tên trường Đại học</label
+        >
+        <input
+          formControlName="name"
+          class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+        />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+            >Tên viết tắt</label
+          >
+          <input
+            formControlName="shortName"
+            class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+            >Website</label
+          >
+          <input
+            formControlName="website"
+            class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+          />
+        </div>
+      </div>
+      <div>
+        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+          >Địa chỉ</label
+        >
+        <textarea
+          formControlName="address"
+          rows="3"
+          class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+        ></textarea>
+      </div>
+
+      <div class="pt-4 border-t border-gray-50">
+        <div class="text-[10px] font-black text-primary-600 uppercase tracking-widest mb-4">
+          Thông tin đầu mối liên hệ
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+              >Họ và tên</label
+            >
+            <input
+              formControlName="contactPerson"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+                >Số điện thoại</label
+              >
+              <input
+                formControlName="contactPhone"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block"
+                >Email</label
+              >
+              <input
+                formControlName="contactEmail"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 outline-none transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="p-6 border-t border-gray-100 bg-gray-50/50 space-y-3">
+      <button
+        (click)="save()"
+        mat-flat-button
+        color="primary"
+        class="w-full !py-7 !rounded-xl !font-bold shadow-lg shadow-primary-100 uppercase tracking-widest"
+      >
+        {{ isEditMode ? 'Lưu cập nhật' : 'Xác nhận thêm' }}
+      </button>
+      <button (click)="closeForm()" mat-button class="w-full !rounded-xl text-gray-400 font-bold">
+        Hủy bỏ
+      </button>
+    </div>
+  </div>
+
+  <!-- DELETE MODAL -->
+  <div
+    *ngIf="isDeleteModalOpen"
+    class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4"
+    (click)="isDeleteModalOpen = false"
+  >
+    <div
+      class="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl animate-scale-in"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex flex-col items-center text-center">
+        <div
+          class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 mb-4"
+        >
+          <mat-icon class="!text-3xl">delete_forever</mat-icon>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Xác nhận xóa?</h3>
+        <p class="text-sm text-gray-500 mb-8">
+          Bạn có chắc muốn xóa <b>{{ deletingItem?.name }}</b> khỏi danh sách đối tác? Hành động này
+          không thể hoàn tác.
+        </p>
+        <div class="flex gap-3 w-full">
+          <button
+            (click)="isDeleteModalOpen = false"
+            class="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-all"
+          >
+            Hủy
+          </button>
+          <button
+            (click)="confirmDelete()"
+            class="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-100 transition-all"
+          >
+            Xóa ngay
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

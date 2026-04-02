@@ -1,0 +1,50 @@
+<nav class="flex items-center text-base">
+  <ng-container *ngIf="breadcrumbData$ | async as breadcrumbOutput">
+    <!-- Dashboard Mode Breadcrumb: [Tên Cấp Cha] < [Tên Cấp Con] -->
+    <ng-container *ngIf="!breadcrumbOutput.isSettingsPage">
+      <ol class="flex items-center space-x-2"> <!-- Adjusted to space-x-2 -->
+        <li *ngFor="let item of breadcrumbOutput.items; let last = last;" class="flex items-center">
+          <span
+            [ngClass]="{
+              'text-black font-semibold': item.isCurrent,
+              'text-gray-500': !item.isCurrent
+            }"
+          >
+            {{ item.label }}
+          </span>
+          <span *ngIf="!last" class="text-gray-500 ml-1"> &lt; </span> <!-- Added ml-1 for space -->
+        </li>
+      </ol>
+    </ng-container>
+
+    <!-- Setting Mode Breadcrumb: < [Tên Cấp Cha] < [Tên Cấp Con] -->
+    <ng-container *ngIf="breadcrumbOutput.isSettingsPage">
+      <ol class="flex items-center space-x-1"> <!-- Adjusted to space-x-1 for a slightly tighter feel between arrow and label -->
+        <li *ngFor="let item of breadcrumbOutput.items; let last = last;" class="flex items-center">
+          <span class="flex items-center"> <!-- New wrapper span for conditional a and span -->
+            <!-- Render clickable '<' only if backLink exists -->
+            <ng-container *ngIf="item.backLink">
+              <a
+                [routerLink]="item.backLink"
+                class="cursor-pointer text-gray-500 hover:text-blue-700 flex items-center pr-1"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </a>
+            </ng-container>
+            <!-- Label part -->
+            <span
+              [ngClass]="{
+                'text-black font-semibold': item.isCurrent,
+                'text-gray-500': !item.isCurrent
+              }"
+            >
+              {{ item.label }}
+            </span>
+          </span> <!-- End of new wrapper span -->
+        </li>
+      </ol>
+    </ng-container>
+  </ng-container>
+</nav>

@@ -1,0 +1,1046 @@
+<!-- ═══════════════════════════ TOAST ═══════════════════════════ -->
+<div *ngIf="showToastFlag" class="fixed top-4 right-4 z-[100] anim-slidedown">
+  <div
+    class="flex items-center gap-2.5 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl"
+  >
+    <svg
+      class="w-4 h-4 text-emerald-400 shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="2.5"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+    <span>{{ toastMessage }}</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ DELETE CONFIRM ═══════════════════════════ -->
+<div
+  *ngIf="isDeleteModalOpen"
+  class="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] flex items-center justify-center px-4"
+  (click)="closeDeleteModal()"
+>
+  <div
+    class="anim-scalein bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex justify-center mb-4">
+      <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+        <svg
+          class="w-6 h-6 text-red-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v3m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+          />
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-center font-semibold text-gray-800 text-[15px] mb-1">Xác nhận xóa hồ sơ</h3>
+    <p class="text-center text-gray-500 text-sm mb-6">
+      Hồ sơ của <strong class="text-gray-700">{{ deletingIntern?.fullName }}</strong> sẽ bị xóa vĩnh
+      viễn.
+    </p>
+    <div class="flex gap-2.5">
+      <button
+        (click)="closeDeleteModal()"
+        class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition"
+      >
+        Hủy
+      </button>
+      <button
+        (click)="confirmDelete()"
+        class="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition"
+      >
+        Xóa hồ sơ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ STATUS MODAL ═══════════════════════════ -->
+<div
+  *ngIf="isStatusModalOpen"
+  class="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] flex items-center justify-center px-4"
+  (click)="closeStatusModal()"
+>
+  <div
+    class="anim-scalein bg-white rounded-2xl w-full max-w-xs shadow-2xl p-6"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800 text-[15px]">Cập nhật trạng thái</h3>
+      <button (click)="closeStatusModal()" class="p-1.5 hover:bg-gray-100 rounded-lg transition">
+        <svg
+          class="w-4 h-4 text-gray-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p class="text-xs text-gray-400 mb-4">
+      Thực tập sinh: <span class="font-semibold text-gray-600">{{ statusIntern?.fullName }}</span>
+    </p>
+    <div class="space-y-2 mb-5">
+      <label
+        *ngFor="let key of STATUS_KEYS"
+        class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+        [class.border-blue-500]="selectedStatus === key"
+        [class.bg-blue-50]="selectedStatus === key"
+        [class.border-gray-200]="selectedStatus !== key"
+        [class.bg-white]="selectedStatus !== key"
+      >
+        <input
+          type="radio"
+          name="status-opt"
+          [value]="key"
+          [(ngModel)]="selectedStatus"
+          class="accent-blue-600"
+        />
+        <span
+          [ngClass]="STATUS_META[key].cls"
+          class="px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+          >{{ STATUS_META[key].label }}</span
+        >
+      </label>
+    </div>
+    <div class="flex gap-2.5">
+      <button
+        (click)="closeStatusModal()"
+        class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition"
+      >
+        Hủy
+      </button>
+      <button
+        (click)="saveStatus()"
+        class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition"
+      >
+        Cập nhật
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PICK USER MODAL ═══════════════════════════ -->
+<div
+  *ngIf="isPickUserModalOpen"
+  class="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] flex items-center justify-center px-4"
+  (click)="closePickUserModal()"
+>
+  <div
+    class="anim-scalein bg-white rounded-2xl w-full max-w-lg shadow-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div>
+        <h2 class="font-semibold text-gray-800 text-[15px]">Chọn tài khoản Intern có sẵn</h2>
+        <p class="text-xs text-gray-400 mt-0.5">
+          Chọn người dùng có role INTERN để tạo hồ sơ thực tập
+        </p>
+      </div>
+      <button (click)="closePickUserModal()" class="p-2 hover:bg-gray-100 rounded-xl transition">
+        <svg
+          class="w-4 h-4 text-gray-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="px-6 pt-4 pb-2">
+      <div class="relative">
+        <svg
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"
+          />
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="userSearchQuery"
+          placeholder="Tìm theo tên hoặc email..."
+          class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"
+        />
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingUsers" class="flex items-center justify-center py-10">
+      <div
+        class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
+      ></div>
+      <span class="ml-3 text-sm text-gray-500">Đang tải danh sách...</span>
+    </div>
+
+    <!-- User list -->
+    <div *ngIf="!isLoadingUsers" class="px-6 py-2 max-h-72 overflow-y-auto space-y-1.5">
+      <!-- Empty state -->
+      <div *ngIf="filteredAvailableUsers.length === 0" class="py-10 text-center text-gray-400">
+        <svg
+          class="w-12 h-12 mx-auto mb-3 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        <p class="text-sm font-medium">
+          {{
+            userSearchQuery
+              ? 'Không tìm thấy kết quả phù hợp'
+              : 'Không có tài khoản Intern nào chưa có hồ sơ'
+          }}
+        </p>
+        <p class="text-xs mt-1 text-gray-400">
+          {{ userSearchQuery ? '' : 'Tất cả tài khoản Intern đã được tạo hồ sơ' }}
+        </p>
+      </div>
+
+      <!-- User rows -->
+      <div
+        *ngFor="let user of filteredAvailableUsers"
+        (click)="selectedUserId = user.id"
+        class="flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all"
+        [class.border-blue-400]="selectedUserId === user.id"
+        [class.bg-blue-50]="selectedUserId === user.id"
+        [class.border-transparent]="selectedUserId !== user.id"
+        [class.bg-gray-50]="selectedUserId !== user.id"
+        [class.hover:bg-gray-100]="selectedUserId !== user.id"
+      >
+        <!-- Avatar chữ -->
+        <div
+          class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0"
+          [style.background]="avatarColor(user.name)"
+        >
+          {{ user.name.charAt(0).toUpperCase() }}
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-800 truncate">{{ user.name }}</p>
+          <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+        </div>
+
+        <!-- Dept badge nếu có -->
+        <span
+          *ngIf="user.departmentName"
+          class="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full shrink-0"
+        >
+          {{ user.departmentName }}
+        </span>
+
+        <!-- Check icon khi được chọn -->
+        <div
+          *ngIf="selectedUserId === user.id"
+          class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0"
+        >
+          <svg
+            class="w-3 h-3 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2.5 px-6 py-4 border-t border-gray-100">
+      <button
+        (click)="closePickUserModal()"
+        class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition"
+      >
+        Hủy
+      </button>
+      <button
+        (click)="confirmPickUser()"
+        [disabled]="!selectedUserId"
+        class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        Chọn & điền thông tin
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ADD / EDIT MODAL ═══════════════════════════ -->
+<div
+  *ngIf="isFormModalOpen"
+  class="fixed inset-0 z-[49] bg-black/10 backdrop-blur-sm"
+  (click)="closeFormModal()"
+></div>
+<div
+  *ngIf="isFormModalOpen"
+  class="fixed top-0 right-0 h-screen w-full max-w-lg bg-white shadow-2xl z-[50] border-l border-gray-100 flex flex-col anim-slideright"
+>
+  <div
+    class="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-white sticky top-0 z-10"
+  >
+    <div class="flex items-center space-x-3">
+      <div
+        class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path
+            *ngIf="isEditMode"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+          <path
+            *ngIf="!isEditMode"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+          />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">
+          {{
+            isEditMode
+              ? 'Cập nhật Hồ sơ'
+              : _pickingFromUserId
+                ? 'Hoàn thiện hồ sơ'
+                : 'Thêm thực tập sinh mới'
+          }}
+        </h2>
+        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+          Chi tiết nhân sự thực tập
+        </p>
+      </div>
+    </div>
+    <button (click)="closeFormModal()" class="p-2 hover:bg-gray-100 rounded-xl transition">
+      <svg
+        class="w-5 h-5 text-gray-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <form
+    [formGroup]="internForm"
+    (ngSubmit)="saveIntern()"
+    class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar"
+  >
+    <!-- Banner: đang tạo từ user có sẵn (Nội dung mới giữ nguyên) -->
+    <div
+      *ngIf="_pickingFromUserId && !isEditMode"
+      class="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 mb-6"
+    >
+      <svg
+        class="w-4 h-4 shrink-0"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span>Đang tạo hồ sơ cho tài khoản đã chọn.</span>
+    </div>
+
+    <!-- Duplicate error -->
+    <div
+      *ngIf="duplicateError"
+      class="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-6"
+    >
+      <svg
+        class="w-4 h-4 mt-0.5 shrink-0"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span>{{ duplicateError }}</span>
+    </div>
+
+    <!-- Section: Thông tin cá nhân -->
+    <div>
+      <div
+        class="text-[10px] font-black text-primary-600 uppercase tracking-widest border-b border-primary-50 pb-2 mb-4"
+      >
+        01. Thông tin định danh
+      </div>
+      <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"
+            >Họ và tên <span class="text-red-500">*</span></label
+          >
+          <input
+            formControlName="fullName"
+            type="text"
+            placeholder="Nguyễn Văn An"
+            [attr.readonly]="_pickingFromUserId ? true : null"
+            class="fm-inp"
+            [class.field-error]="isInvalid('fullName')"
+            [class.bg-gray-100]="_pickingFromUserId && !isEditMode"
+            [class.cursor-not-allowed]="_pickingFromUserId && !isEditMode"
+          />
+          <p *ngIf="isInvalid('fullName')" class="fm-err">{{ getError('fullName') }}</p>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"
+            >Email <span class="text-red-500">*</span></label
+          >
+          <input
+            formControlName="email"
+            type="email"
+            placeholder="intern@email.com"
+            [attr.readonly]="_pickingFromUserId ? true : null"
+            class="fm-inp"
+            [class.field-error]="isInvalid('email')"
+            [class.bg-gray-100]="_pickingFromUserId && !isEditMode"
+            [class.cursor-not-allowed]="_pickingFromUserId && !isEditMode"
+          />
+          <p *ngIf="isInvalid('email')" class="fm-err">{{ getError('email') }}</p>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"
+            >Số điện thoại <span class="text-red-500">*</span></label
+          >
+          <input
+            formControlName="phone"
+            type="tel"
+            placeholder="0901234567"
+            class="fm-inp"
+            [class.field-error]="isInvalid('phone')"
+          />
+          <p *ngIf="isInvalid('phone')" class="fm-err">{{ getError('phone') }}</p>
+        </div>
+
+        <div class="col-span-2 mt-2">
+          <div
+            class="text-[10px] font-black text-primary-600 uppercase tracking-widest border-b border-primary-50 pb-2 mb-4"
+          >
+            02. Học vấn & Chuyên môn
+          </div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"
+            >Ngành học</label
+          >
+          <input
+            formControlName="major"
+            type="text"
+            placeholder="Công nghệ thông tin"
+            class="fm-inp"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Thông tin thực tập -->
+    <div>
+      <div
+        class="text-[10px] font-black text-primary-600 uppercase tracking-widest border-b border-primary-50 pb-2 mb-4"
+      >
+        03. Phân công công tác
+      </div>
+      <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+        <div class="col-span-2">
+          <label class="fm-lbl">Trường Đại học <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <input
+              type="text"
+              [(ngModel)]="universitySearch"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="showUniversityDropdown = true"
+              (blur)="showUniversityDropdown && !universitySearch ? clearUniversity() : null"
+              placeholder="Nhập tên trường..."
+              class="fm-inp pr-8"
+              autocomplete="off"
+            />
+            <!-- Clear button -->
+            <button
+              *ngIf="universitySearch"
+              type="button"
+              (mousedown)="clearUniversity()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <!-- Dropdown -->
+            <div
+              *ngIf="showUniversityDropdown && filteredUniversities.length > 0"
+              class="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+            >
+              <div
+                *ngFor="let u of filteredUniversities"
+                (mousedown)="selectUniversity(u)"
+                class="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              >
+                {{ u.name }}
+              </div>
+            </div>
+          </div>
+          <!-- Hidden value indicator -->
+          <p *ngIf="internForm.get('universityId')?.value" class="text-xs text-emerald-600 mt-1">
+            ✓ Đã chọn từ danh sách
+          </p>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="fm-lbl">Phòng ban <span class="text-red-500">*</span></label>
+          <select
+            formControlName="departmentId"
+            class="fm-inp"
+            [class.field-error]="isInvalid('departmentId')"
+          >
+            <option value="">Chọn phòng ban</option>
+            <option *ngFor="let d of DEPARTMENTS" [value]="d.id">{{ d.name }}</option>
+          </select>
+          <p *ngIf="isInvalid('departmentId')" class="fm-err">{{ getError('departmentId') }}</p>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="fm-lbl">Vị trí thực tập <span class="text-red-500">*</span></label>
+          <select
+            formControlName="positionId"
+            class="fm-inp"
+            [class.field-error]="isInvalid('positionId')"
+            [attr.disabled]="availablePositions.length === 0 ? true : null"
+          >
+            <option value="">
+              {{ availablePositions.length ? 'Chọn vị trí' : 'Chọn phòng ban trước' }}
+            </option>
+            <option *ngFor="let p of availablePositions" [value]="p.id">{{ p.name }}</option>
+          </select>
+          <p *ngIf="isInvalid('positionId')" class="fm-err">{{ getError('positionId') }}</p>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="fm-lbl">Mentor</label>
+          <select formControlName="mentorId" class="fm-inp">
+            <option [ngValue]="null">Không chỉ định</option>
+            <option *ngFor="let m of MENTORS" [ngValue]="m.id">{{ m.name }}</option>
+          </select>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="fm-lbl">Manager</label>
+          <select formControlName="managerId" class="fm-inp">
+            <option [ngValue]="null">Không chỉ định</option>
+            <option *ngFor="let m of MANAGERS" [ngValue]="m.id">{{ m.name }}</option>
+          </select>
+        </div>
+
+        <!-- Section: Lộ trình & Trạng thái -->
+        <div class="col-span-2 mt-4">
+          <div
+            class="text-[10px] font-black text-primary-600 uppercase tracking-widest border-b border-primary-50 pb-2 mb-4"
+          >
+            04. Lộ trình & Trạng thái
+          </div>
+        </div>
+
+        <div class="col-span-2">
+          <label class="fm-lbl">Trạng thái</label>
+          <label class="fm-lbl">Trạng thái</label>
+          <select formControlName="status" class="fm-inp">
+            <option *ngFor="let key of STATUS_KEYS" [value]="key">
+              {{ STATUS_META[key].label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="fm-lbl">Ngày bắt đầu <span class="text-red-500">*</span></label>
+          <input
+            formControlName="startDate"
+            type="date"
+            class="fm-inp"
+            [class.field-error]="isInvalid('startDate')"
+          />
+          <p *ngIf="isInvalid('startDate')" class="fm-err">{{ getError('startDate') }}</p>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label class="fm-lbl">Ngày kết thúc</label>
+          <input
+            formControlName="endDate"
+            type="date"
+            class="fm-inp"
+            [class.field-error]="
+              internForm.hasError('dateRange') && internForm.get('endDate')?.touched
+            "
+          />
+          <p
+            *ngIf="internForm.hasError('dateRange') && internForm.get('endDate')?.touched"
+            class="fm-err"
+          >
+            Ngày kết thúc phải sau ngày bắt đầu.
+          </p>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Modal footer (Đồng bộ kiểu nút từ interns.html) -->
+  <div
+    class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col space-y-3 flex-shrink-0"
+  >
+    <button
+      type="submit"
+      (click)="saveIntern()"
+      class="w-full py-7 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-100 transition uppercase tracking-widest"
+    >
+      {{ isEditMode ? 'Xác nhận cập nhật' : 'Xác nhận lưu hồ sơ' }}
+    </button>
+    <button
+      type="button"
+      (click)="closeFormModal()"
+      class="w-full py-3 rounded-xl text-gray-400 text-sm font-bold hover:bg-gray-100 transition"
+    >
+      Hủy bỏ
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MAIN PAGE ═══════════════════════════ -->
+<div class="max-w-[1400px] mx-auto px-4 py-5 sm:px-6 sm:py-8 space-y-8 animate-fade-in">
+  <app-ui-page-header
+    title="Hồ sơ Thực tập sinh"
+    subtitle="Quản lý thông tin và trạng thái thực tập của các nhân sự mới"
+  ></app-ui-page-header>
+
+  <app-ui-card paddingClass="p-0">
+    <!-- Toolbar row 1: actions + search -->
+    <div
+      class="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 flex-wrap sticky top-0 z-[5]"
+    >
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Nút Thêm mới (tạo user + profile) -->
+        <button
+          (click)="openAddModal()"
+          class="flex items-center gap-1.5 bg-[#2563eb] hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-100"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Thêm Thực tập sinh
+        </button>
+
+        <!-- Nút Chọn từ danh sách (tài khoản có sẵn) -->
+        <button
+          (click)="openPickUserModal()"
+          class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-100"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+            />
+          </svg>
+          Chọn từ danh sách
+        </button>
+
+        <!-- Nút Import Excel -->
+        <button
+          (click)="triggerImport()"
+          class="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-50 text-gray-600 text-sm font-bold px-4 py-2.5 rounded-xl transition bg-white shadow-sm"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8.5 7.5M12 4l3.5 3.5"
+            />
+          </svg>
+          Tải tệp Excel
+        </button>
+        <input
+          id="xlsx-input"
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          class="hidden"
+          (change)="handleImport($event)"
+        />
+      </div>
+
+      <div class="relative">
+        <svg
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+          />
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="applyFilters()"
+          placeholder="Tìm theo tên hoặc email..."
+          class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg w-[280px] bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"
+        />
+      </div>
+    </div>
+
+    <!-- Toolbar row 2: filters -->
+    <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 flex-wrap">
+      <div class="relative">
+        <select
+          [(ngModel)]="filterDept"
+          (change)="onDeptFilterChange()"
+          class="fsel"
+          [class.active]="filterDept"
+        >
+          <option value="">Chọn phòng ban</option>
+          <option *ngFor="let d of DEPARTMENTS" [value]="d.name">{{ d.name }}</option>
+        </select>
+      </div>
+      <div class="relative">
+        <select
+          [(ngModel)]="filterPos"
+          (change)="applyFilters()"
+          class="fsel"
+          [class.active]="filterPos"
+        >
+          <option value="">Chọn vị trí</option>
+          <option *ngFor="let p of filterPositionOptions" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+      <div class="relative">
+        <select
+          [(ngModel)]="filterUniv"
+          (change)="applyFilters()"
+          class="fsel"
+          [class.active]="filterUniv"
+          style="min-width: 200px"
+        >
+          <option value="">Chọn trường học</option>
+          <option *ngFor="let u of UNIVERSITIES" [value]="u.id">{{ u.name }}</option>
+        </select>
+      </div>
+      <div class="relative">
+        <select
+          [(ngModel)]="filterStatus"
+          (change)="applyFilters()"
+          class="fsel"
+          [class.active]="filterStatus"
+        >
+          <option value="">Chọn trạng thái</option>
+          <option *ngFor="let key of STATUS_KEYS" [value]="key">
+            {{ STATUS_META[key].label }}
+          </option>
+        </select>
+      </div>
+      <button
+        *ngIf="hasActiveFilter"
+        (click)="clearAllFilters()"
+        class="flex items-center gap-1 px-3 py-[7px] text-[13px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition border border-transparent hover:border-gray-200"
+      >
+        <svg
+          class="w-3.5 h-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Bỏ lọc
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="p-20 flex flex-col items-center justify-center space-y-4">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="text-sm text-gray-400 font-medium">Đang tải danh sách nhân sự...</p>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading" class="overflow-x-auto">
+      <table mat-table [dataSource]="filtered" class="w-full">
+        <!-- Intern Column -->
+        <ng-container matColumnDef="intern">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="bg-white !px-5 !py-4 !text-[10px] !font-bold !text-gray-400 uppercase tracking-widest border-b border-gray-100 text-left whitespace-nowrap"
+          >
+            Thực tập sinh
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5 whitespace-nowrap">
+            <div class="flex items-center space-x-4">
+              <div
+                class="w-10 h-10 rounded-xl bg-primary-500 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-primary-100"
+              >
+                {{ row.fullName.charAt(0).toUpperCase() }}
+              </div>
+              <div class="flex flex-col">
+                <span
+                  class="font-bold text-gray-800 leading-tight hover:text-primary-600 transition-colors cursor-pointer"
+                  >{{ row.fullName }}</span
+                >
+                <span
+                  class="text-[10px] text-gray-400 font-medium mt-1 uppercase tracking-tighter"
+                  [title]="getUnivFull(row.universityId)"
+                  >{{ row.universityName || 'University N/A' }}</span
+                >
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Contact Column -->
+        <ng-container matColumnDef="contact">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="bg-white !px-5 !py-4 !text-[10px] !font-bold !text-gray-400 uppercase tracking-widest border-b border-gray-100 text-left whitespace-nowrap"
+          >
+            Liên hệ
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5 whitespace-nowrap">
+            <div class="flex flex-col space-y-1">
+              <div class="flex items-center text-xs text-gray-600 font-medium">
+                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 mr-1.5 text-gray-300">email</mat-icon>
+                {{ row.email }}
+              </div>
+              <div class="flex items-center text-xs text-gray-400">
+                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 mr-1.5 text-gray-300">call</mat-icon>
+                {{ row.phone }}
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Major Column -->
+        <ng-container matColumnDef="major">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="bg-white !px-5 !py-4 !text-[10px] !font-bold !text-gray-400 uppercase tracking-widest border-b border-gray-100 text-left whitespace-nowrap"
+          >
+            Chuyên ngành
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5 whitespace-nowrap">
+            <span
+              class="text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100"
+              >{{ row.major || 'N/A' }}</span
+            >
+          </td>
+        </ng-container>
+
+        <!-- Organization Column -->
+        <ng-container matColumnDef="org">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="bg-white !px-5 !py-4 !text-[10px] !font-bold !text-gray-400 uppercase tracking-widest border-b border-gray-100 text-left whitespace-nowrap"
+          >
+            Tổ chức
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5 whitespace-nowrap">
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-gray-700">{{ row.deptName }}</span>
+              <span class="text-[10px] text-gray-400 font-medium mt-0.5">{{ row.posName }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="bg-white !px-5 !py-4 !text-[10px] !font-bold !text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center whitespace-nowrap"
+          >
+            Trạng thái
+          </th>
+          <td mat-cell *matCellDef="let row" class="!px-5 !py-5 text-center whitespace-nowrap">
+            <button
+              (click)="openStatusModal(row)"
+              [ngClass]="getStatusMeta(row.status).cls"
+              class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-opacity whitespace-nowrap"
+            >
+              {{ getStatusMeta(row.status).label }}
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="bg-white !px-5 !py-4 !text-[10px] !font-bold !text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right whitespace-nowrap"
+          >
+            Thao tác
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let row"
+            class="!px-5 !py-5 text-right space-x-1 whitespace-nowrap"
+          >
+            <button
+              mat-icon-button
+              (click)="openEditModal(row)"
+              class="text-gray-400 hover:text-primary-500 transition-all !w-8 !h-8"
+              matTooltip="Chỉnh sửa"
+            >
+              <mat-icon class="!text-lg">edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              (click)="openDeleteModal(row)"
+              class="text-gray-400 hover:text-danger transition-all !w-8 !h-8"
+              matTooltip="Xóa"
+            >
+              <mat-icon class="!text-lg">delete_outline</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns; trackBy: trackById"
+          class="hover:bg-gray-50/50 transition-colors group cursor-pointer border-b border-gray-50"
+        ></tr>
+
+        <!-- Empty state -->
+        <tr *matNoDataRow>
+          <td colspan="8" class="px-4 py-16 text-center">
+            <div class="flex flex-col items-center gap-2.5">
+              <div class="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center">
+                <svg
+                  class="w-6 h-6 text-gray-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <p class="text-gray-600 text-[13px] font-medium">
+                {{
+                  hasActiveFilter ? 'Không tìm thấy kết quả phù hợp' : 'Chưa có thực tập sinh nào'
+                }}
+              </p>
+              <p class="text-gray-400 text-xs">
+                {{
+                  hasActiveFilter
+                    ? 'Thử thay đổi bộ lọc'
+                    : 'Nhấn "+ Thêm" hoặc "Chọn từ danh sách" để bắt đầu'
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div
+      *ngIf="interns.length > 0"
+      class="px-4 py-2.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400"
+    >
+      <span
+        >Hiển thị <span class="text-gray-600 font-medium">{{ filtered.length }}</span> /
+        {{ interns.length }} hồ sơ</span
+      >
+      <button
+        *ngIf="hasActiveFilter"
+        (click)="clearAllFilters()"
+        class="text-blue-500 hover:underline"
+      >
+        Xóa bộ lọc
+      </button>
+    </div>
+  </app-ui-card>
+</div>

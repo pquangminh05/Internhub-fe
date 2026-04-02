@@ -1,0 +1,341 @@
+.profile-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  min-height: calc(100vh - 64px); /* Adjust based on your header height */
+  background-color: #f5f5f5;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 90%; /* Adjust to 90% of its parent container */
+  max-width: 1000px; /* Optional: Set an absolute max-width to prevent it from getting too wide */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.loading-card, .error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.error-card mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 10px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f9f9f9;
+}
+
+.profile-avatar {
+  /* Original profile-avatar styles removed as they are now handled by .avatar-upload-container and its child .profile-avatar */
+}
+
+/* Styling for Avatar Upload */
+.avatar-upload-container {
+  position: relative;
+  width: 80px; /* Match avatar size */
+  height: 80px; /* Match avatar size */
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  margin-right: 20px; /* Keep spacing with profile-info */
+  border: 2px solid #ddd; /* Keep existing border */
+  display: flex; /* To center overlay/icon if needed */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent it from shrinking */
+}
+
+.avatar-upload-container .profile-avatar {
+  width: 100%; /* Fill container */
+  height: 100%; /* Fill container */
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+  margin-right: 0; /* Reset margin from original .profile-avatar */
+}
+
+.avatar-upload-container::before { /* Overlay */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 50%; /* Match container border-radius */
+}
+
+.avatar-upload-container::after { /* Camera Icon */
+  content: '\e412'; /* Material icon code for 'photo_camera' */
+  font-family: 'Material Icons'; /* Ensure Material Icons font is loaded */
+  font-size: 32px;
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* Allow click to pass through to container */
+}
+
+.avatar-upload-container:hover .profile-avatar {
+  opacity: 0.7; /* Slightly dim the avatar on hover */
+}
+
+.avatar-upload-container:hover::before,
+.avatar-upload-container:hover::after {
+  opacity: 1; /* Show overlay and camera icon on hover */
+}
+
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-info h2 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.profile-info p {
+  margin: 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.profile-email {
+  margin-bottom: 8px !important;
+}
+
+.department-name-text {
+  font-size: 14px;
+  color: #555;
+  margin-top: 5px;
+  display: block; /* Ensures it takes its own line if needed */
+}
+
+mat-card-content {
+  padding: 20px;
+}
+
+.internship-card {
+  margin-top: 20px;
+  border: 1px solid #e0e0e0;
+  box-shadow: none;
+}
+
+.internship-card mat-card-header {
+  background-color: #f0f0f0;
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.internship-card mat-card-title {
+  font-size: 18px;
+  color: #333;
+}
+
+.internship-card mat-card-subtitle {
+  color: #666;
+}
+
+.internship-card mat-card-content p {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.progress-section {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #777;
+  margin-top: 5px;
+}
+
+mat-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.status-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed #e0e0e0;
+}
+
+.days-remaining, .internship-status {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.days-remaining mat-icon, .internship-status mat-icon {
+  margin-right: 5px;
+  font-size: 18px;
+}
+
+.days-remaining-normal {
+  background-color: #e3f2fd; /* Light blue */
+  color: #2196f3;
+}
+
+.days-remaining-warning {
+  background-color: #ffebee; /* Light red */
+  color: #f44336;
+}
+
+.days-remaining-past {
+  background-color: #eeeeee; /* Grey */
+  color: #777777;
+}
+
+.status-in-progress {
+  background-color: #e8f5e9; /* Light green */
+  color: #4caf50;
+}
+
+.status-completed {
+  background-color: #e3f2fd; /* Light blue */
+  color: #2196f3;
+}
+
+.status-terminated {
+  background-color: #ffebee; /* Light red */
+  color: #f44336;
+}
+
+.status-default {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #777;
+  background-color: #fdfdfd;
+  border: 1px dashed #e0e0e0;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 10px;
+  color: #999;
+}
+
+.logout-button {
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Styles for Account Security Section */
+.security-panel {
+  margin-top: 20px; /* Space from the content above */
+  border: 1px solid #e0e0e0;
+  box-shadow: none;
+}
+
+.security-panel .mat-expansion-panel-header {
+  background-color: #f0f0f0;
+  padding: 0 15px;
+}
+
+.security-panel .mat-panel-title,
+.security-panel .mat-panel-description {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.security-panel .mat-panel-title mat-icon {
+  margin-right: 8px;
+  color: #555;
+}
+
+.password-change-form {
+  padding: 15px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Space between form fields */
+}
+
+.password-fields-row {
+  display: flex;
+  flex-wrap: nowrap; /* Force items to stay on a single line */
+  gap: 15px; /* Space between form fields in a row */
+}
+
+.password-fields-row .mat-form-field {
+  flex: 1 1 0; /* Make each mat-form-field grow and shrink equally, distributing space */
+}
+
+.full-width {
+  width: 100%;
+}
+
+.change-password-button {
+  margin-top: 10px; /* Space from the last form field */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.change-password-button mat-icon {
+  margin-right: 8px;
+}
+
+.change-password-button mat-spinner {
+  margin-left: 8px;
+}
+
+/* Specific styles for snackbar messages */
+.success-snackbar {
+  background-color: #4CAF50 !important; /* Green */
+  color: white !important;
+}
+
+.error-snackbar {
+  background-color: #f44336 !important; /* Red */
+  color: white !important;
+}
+
+.warning-snackbar {
+  background-color: #ff9800 !important; /* Orange */
+  color: white !important;
+}

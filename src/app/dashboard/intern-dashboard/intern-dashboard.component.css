@@ -1,0 +1,17 @@
+/* Custom utilities for Intern Dashboard */
+
+.status-todo { @apply bg-warning/10 text-warning border border-warning/20; }
+.status-in-progress { @apply bg-info/10 text-info border border-info/20; }
+.status-completed { @apply bg-success/10 text-success border border-success/20; }
+
+:host ::ng-deep .mat-mdc-progress-bar {
+  --mdc-linear-progress-active-indicator-color: #2B59FF;
+  --mdc-linear-progress-track-color: #F1F5F9;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}

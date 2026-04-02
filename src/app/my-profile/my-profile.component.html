@@ -1,0 +1,212 @@
+<div class="profile-container">
+  <mat-card *ngIf="isLoading" class="loading-card">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Đang tải thông tin hồ sơ...</p>
+  </mat-card>
+
+  <mat-card *ngIf="error" class="error-card">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-button color="primary" (click)="ngOnInit()">Thử lại</button>
+  </mat-card>
+
+  <mat-card *ngIf="userProfile && !isLoading && !error" class="profile-card">
+    <!-- Header Section -->
+    <div class="profile-header">
+      <div class="avatar-upload-container" (click)="fileInput.click()">
+        <img
+          [src]="userProfile.avatar || userService.getDefaultAvatar()"
+          alt="User Avatar"
+          class="profile-avatar"
+        />
+        <input
+          type="file"
+          #fileInput
+          (change)="onFileSelected($event)"
+          accept="image/jpeg,image/png"
+          style="display: none;"
+        />
+        <!-- Overlay and camera icon will be handled by CSS -->
+      </div>
+      <div class="profile-info">
+        <h2 class="mat-h2">{{ userProfile.name }}</h2>
+        <p class="mat-body-1 profile-email">{{ userProfile.email }}</p>
+        <span
+          *ngIf="userProfile.departmentName"
+          class="department-name-text"
+        >{{ userProfile.departmentName }}</span>
+      </div>
+    </div>
+
+    <mat-card-content>
+      <!-- Internship Profile Section -->
+      <div *ngIf="userProfile.positionName; else emptyInternshipState">
+        <h3 class="mat-subheading-2">Thông tin thực tập</h3>
+        <mat-card class="internship-card">
+          <mat-card-header>
+            <mat-card-title>{{ userProfile.positionName }}</mat-card-title>
+            <mat-card-subtitle>{{ userProfile.universityName }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p>
+              <strong>Người hướng dẫn:</strong>
+              {{ userProfile.mentorName }}
+            </p>
+            <p>
+              <strong>Thời gian:</strong>
+              {{ getFormattedDate(userProfile.startDate!) }} -
+              {{ getFormattedDate(userProfile.endDate!) }}
+            </p>
+
+            <!-- Progress Bar -->
+            <div class="progress-section">
+              <mat-progress-bar
+                mode="determinate"
+                [value]="internshipProgress"
+                [matTooltip]="'Tiến độ: ' + (internshipProgress | number:'1.0-0') + '%'"
+              ></mat-progress-bar>
+              <div class="progress-labels">
+                <span>Bắt đầu</span>
+                <span>Kết thúc</span>
+              </div>
+            </div>
+
+            <!-- Days Remaining & Status -->
+            <div class="status-section">
+              <div class="days-remaining" [ngClass]="getDaysRemaining().colorClass">
+                <mat-icon>calendar_today</mat-icon>
+                <span *ngIf="getDaysRemaining().days > 0">
+                  Còn lại {{ getDaysRemaining().days }} ngày
+                </span>
+                <span *ngIf="getDaysRemaining().days <= 0">
+                  Đã kết thúc
+                </span>
+              </div>
+              <div class="internship-status" [ngClass]="getStatusColorClass(userProfile.status!)">
+                <mat-icon>info</mat-icon>
+                <span>{{ getTranslatedStatus(userProfile.status!) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <ng-template #emptyInternshipState>
+        <div class="empty-state">
+          <mat-icon>info_outline</mat-icon>
+          <p>Bạn hiện chưa có thông tin hồ sơ thực tập. Vui lòng liên hệ HR.</p>
+        </div>
+      </ng-template>
+
+      <!-- Account Security Section -->
+      <mat-expansion-panel
+        class="security-panel"
+        [expanded]="panelOpenState"
+        (opened)="panelOpenState = true"
+        (closed)="panelOpenState = false"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>lock</mat-icon>
+            Bảo mật tài khoản
+          </mat-panel-title>
+          <mat-panel-description>
+            Thay đổi mật khẩu của bạn
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <form [formGroup]="changePasswordForm" (ngSubmit)="onSubmitChangePassword()" class="password-change-form">
+          <div class="password-fields-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Mật khẩu hiện tại</mat-label>
+              <input
+                matInput
+                [type]="hideOldPassword ? 'password' : 'text'"
+                formControlName="oldPassword"
+                required
+              />
+              <button
+                mat-icon-button
+                matSuffix
+                (click)="hideOldPassword = !hideOldPassword"
+                [attr.aria-label]="'Hide password'"
+                [attr.aria-pressed]="hideOldPassword"
+              >
+                <mat-icon>{{ hideOldPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="changePasswordForm.get('oldPassword')?.hasError('required') && changePasswordForm.get('oldPassword')?.touched">
+                Mật khẩu hiện tại là bắt buộc.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Mật khẩu mới</mat-label>
+              <input
+                matInput
+                [type]="hideNewPassword ? 'password' : 'text'"
+                formControlName="newPassword"
+                required
+              />
+              <button
+                mat-icon-button
+                matSuffix
+                (click)="hideNewPassword = !hideNewPassword"
+                [attr.aria-label]="'Hide password'"
+                [attr.aria-pressed]="hideNewPassword"
+              >
+                <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="changePasswordForm.get('newPassword')?.hasError('required') && changePasswordForm.get('newPassword')?.touched">
+                Mật khẩu mới là bắt buộc.
+              </mat-error>
+              <mat-error *ngIf="changePasswordForm.get('newPassword')?.hasError('minlength') && changePasswordForm.get('newPassword')?.touched">
+                Mật khẩu mới phải có ít nhất 8 ký tự.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Xác nhận mật khẩu mới</mat-label>
+              <input
+                matInput
+                [type]="hideConfirmPassword ? 'password' : 'text'"
+                formControlName="confirmPassword"
+                required
+              />
+              <button
+                mat-icon-button
+                matSuffix
+                (click)="hideConfirmPassword = !hideConfirmPassword"
+                [attr.aria.label]="'Hide password'"
+                [attr.aria-pressed]="hideConfirmPassword"
+              >
+                <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="changePasswordForm.get('confirmPassword')?.hasError('required') && changePasswordForm.get('confirmPassword')?.touched">
+                Xác nhận mật khẩu mới là bắt buộc.
+              </mat-error>
+              <mat-error *ngIf="changePasswordForm.get('confirmPassword')?.hasError('mismatch') && changePasswordForm.get('confirmPassword')?.touched">
+                Mật khẩu xác nhận không khớp với mật khẩu mới.
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="changePasswordForm.invalid || isChangingPassword"
+            class="change-password-button"
+          >
+            <mat-icon>vpn_key</mat-icon>
+            <span *ngIf="!isChangingPassword">Đổi mật khẩu</span>
+            <mat-spinner *ngIf="isChangingPassword" diameter="20"></mat-spinner>
+          </button>
+        </form>
+      </mat-expansion-panel>
+
+      <button mat-flat-button color="warn" class="logout-button" (click)="logout()">
+        <mat-icon>logout</mat-icon> Đăng xuất
+      </button>
+
+    </mat-card-content>
+  </mat-card>
+</div>

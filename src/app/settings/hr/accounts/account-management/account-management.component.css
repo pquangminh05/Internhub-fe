@@ -1,0 +1,21 @@
+/* Custom styles for account management component */
+
+:host ::ng-deep .modern-radio {
+  @apply rounded-xl px-4 py-2 transition-all duration-200;
+}
+
+:host ::ng-deep .mat-mdc-radio-button .mdc-form-field {
+  @apply text-xs font-semibold uppercase tracking-wider text-gray-500;
+}
+
+:host ::ng-deep .mat-mdc-checkbox.mat-primary {
+  --mdc-checkbox-selected-focus-icon-color: #2B59FF;
+  --mdc-checkbox-selected-hover-icon-color: #2B59FF;
+  --mdc-checkbox-selected-icon-color: #2B59FF;
+  --mdc-checkbox-selected-pressed-icon-color: #2B59FF;
+}
+
+/* Ensure sticky column background matches */
+.sticky {
+  background-color: inherit;
+}

@@ -1,0 +1,1272 @@
+<!-- ══ Toast ════════════════════════════════════════════════════════════════ -->
+<div class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+  <div
+    *ngFor="let toast of toasts"
+    class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium min-w-[260px] animate-toast"
+    [class.bg-white]="toast.type === 'success'"
+    [class.border]="toast.type === 'success'"
+    [class.border-green-200]="toast.type === 'success'"
+    [class.text-gray-800]="toast.type === 'success'"
+    [class.bg-red-600]="toast.type === 'error'"
+    [class.text-white]="toast.type === 'error'"
+  >
+    <div
+      *ngIf="toast.type === 'success'"
+      class="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center shrink-0"
+    >
+      <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          d="M5 13l4 4L19 7"
+        />
+      </svg>
+    </div>
+    <div
+      *ngIf="toast.type === 'error'"
+      class="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center shrink-0"
+    >
+      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </div>
+    <span class="flex-1">{{ toast.message }}</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     HR VIEW — mới
+════════════════════════════════════════════════════════════════════════════ -->
+<ng-container *ngIf="currentRole === 'HR'">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Thông báo HR</h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Xem các quyết định của Manager và thực hiện bước tiếp theo.
+    </p>
+  </div>
+
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <div>
+      <span class="text-sm font-semibold">Chưa đọc: </span>
+      <span class="text-blue-700 font-bold">{{ hrUnreadCount }}</span>
+    </div>
+    <button
+      type="button"
+      class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+      (click)="loadHrNotifications()"
+    >
+      Làm mới
+    </button>
+  </div>
+
+  <div *ngIf="isHrNotificationsLoading" class="flex items-center justify-center py-8">
+    <div
+      class="w-7 h-7 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+    ></div>
+  </div>
+
+  <div
+    *ngIf="!isHrNotificationsLoading && hrNotifications.length === 0"
+    class="py-10 text-center text-gray-400"
+  >
+    Chưa có thông báo nào.
+  </div>
+
+  <ul *ngIf="!isHrNotificationsLoading && hrNotifications.length > 0" class="space-y-2">
+    <li
+      *ngFor="let n of hrNotifications"
+      class="p-4 border rounded-lg flex justify-between items-start gap-3"
+      [class.bg-gray-50]="!n.isRead"
+    >
+      <div>
+        <p class="font-semibold text-gray-900">{{ n.title }}</p>
+        <p class="text-sm text-gray-600 mt-1">{{ n.message }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          {{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+          <span *ngIf="!n.isRead" class="text-red-500 font-medium">●</span>
+        </p>
+      </div>
+      <button
+        type="button"
+        class="px-3 py-1 text-xs border rounded-lg"
+        [disabled]="n.isRead"
+        (click)="markHrNotificationRead(n.id)"
+      >
+        Đánh dấu đã đọc
+      </button>
+    </li>
+  </ul>
+</ng-container>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     MENTOR VIEW — giữ nguyên toàn bộ
+════════════════════════════════════════════════════════════════════════════ -->
+<ng-container *ngIf="currentRole === 'MENTOR'">
+  <!-- Page Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Đánh giá và phê duyệt</h1>
+  </div>
+
+  <!-- Intern Selector -->
+  <div class="mb-6 flex items-center gap-3">
+    <select
+      [(ngModel)]="selectedInternId"
+      (ngModelChange)="onInternChange($event)"
+      [disabled]="isInternsLoading"
+      class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[200px] disabled:opacity-60"
+    >
+      <option [ngValue]="null">{{ isInternsLoading ? 'Đang tải...' : '--Chọn intern--' }}</option>
+      <option *ngFor="let intern of interns" [ngValue]="intern.id">{{ intern.name }}</option>
+    </select>
+    <div
+      *ngIf="isInternsLoading"
+      class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
+    ></div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading && selectedInternId" class="flex items-center justify-center py-16">
+    <div
+      class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"
+    ></div>
+    <span class="ml-3 text-gray-500 text-sm">Đang tải...</span>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="!isLoading && selectedInternId">
+    <!-- Bảng điểm tổng hợp -->
+    <div
+      *ngIf="evaluation?.skillSummaries?.length"
+      class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6"
+    >
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-700">Bảng điểm tổng hợp từ Micro-tasks</h2>
+        <span
+          class="text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-medium border border-green-100"
+        >
+          {{ evaluation?.totalTasksReviewed }}/{{ evaluation?.totalTasksAll }} task đã chấm
+        </span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th
+                class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                Kỹ năng
+              </th>
+              <th
+                class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                Số task
+              </th>
+              <th
+                class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                Tổng trọng số
+              </th>
+              <th
+                class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                Điểm TB
+              </th>
+              <th class="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Mức độ
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let skill of evaluation?.skillSummaries"
+              class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
+            >
+              <td class="px-5 py-3 font-medium text-gray-800">{{ skill.skillName }}</td>
+              <td class="px-4 py-3 text-center text-gray-600">{{ skill.taskCount }}</td>
+              <td class="px-4 py-3 text-center text-gray-600">{{ skill.totalWeight }}</td>
+              <td class="px-4 py-3 text-center">
+                <span
+                  class="font-semibold"
+                  [class.text-green-600]="skill.averageScore >= 7"
+                  [class.text-yellow-600]="skill.averageScore >= 5 && skill.averageScore < 7"
+                  [class.text-red-500]="skill.averageScore < 5"
+                >
+                  {{ skill.averageScore | number: '1.1-2' }}/10
+                </span>
+              </td>
+              <td class="px-5 py-3">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[80px]">
+                    <div
+                      class="h-1.5 rounded-full"
+                      [class.bg-green-500]="skill.averageScore >= 7"
+                      [class.bg-yellow-500]="skill.averageScore >= 5 && skill.averageScore < 7"
+                      [class.bg-red-400]="skill.averageScore < 5"
+                      [style.width.%]="(skill.averageScore / 10) * 100"
+                    ></div>
+                  </div>
+                  <span class="text-xs text-gray-400 whitespace-nowrap">{{
+                    getScoreLabel(skill.averageScore)
+                  }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Form đánh giá + action -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-700">Đánh giá và nhận xét tổng kết</h2>
+        <span
+          class="text-xs px-2.5 py-1 rounded-full font-medium"
+          [class.bg-blue-50]="evaluation?.status === 'SUBMITTED'"
+          [class.text-blue-700]="evaluation?.status === 'SUBMITTED'"
+          [class.border]="evaluation?.status === 'SUBMITTED'"
+          [class.border-blue-100]="evaluation?.status === 'SUBMITTED'"
+          [class.bg-gray-100]="evaluation?.status === 'DRAFT'"
+          [class.text-gray-500]="evaluation?.status === 'DRAFT'"
+          [class.bg-gray-50]="!evaluation?.status"
+          [class.text-gray-400]="!evaluation?.status"
+        >
+          {{
+            evaluation?.status === 'SUBMITTED'
+              ? 'Đã gửi phê duyệt'
+              : evaluation?.status === 'DRAFT'
+                ? 'Bản nháp'
+                : 'Chưa có đánh giá'
+          }}
+        </span>
+      </div>
+
+      <div class="px-5 py-5">
+        <div
+          *ngIf="evaluation?.isLocked"
+          class="mb-4 flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+          <span>Đánh giá đã được <strong>gửi phê duyệt</strong> — không thể chỉnh sửa thêm.</span>
+        </div>
+
+        <!-- Tab chọn -->
+        <div class="flex gap-2 mb-4">
+          <button
+            type="button"
+            (click)="switchTab('upload')"
+            class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+            [class.bg-gray-800]="activeTab === 'upload'"
+            [class.text-white]="activeTab === 'upload'"
+            [class.border-gray-800]="activeTab === 'upload'"
+            [class.bg-white]="activeTab !== 'upload'"
+            [class.text-gray-700]="activeTab !== 'upload'"
+            [class.border-gray-300]="activeTab !== 'upload'"
+          >
+            Tải tệp lên
+          </button>
+          <button
+            type="button"
+            (click)="switchTab('write')"
+            class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+            [class.bg-gray-800]="activeTab === 'write'"
+            [class.text-white]="activeTab === 'write'"
+            [class.border-gray-800]="activeTab === 'write'"
+            [class.bg-white]="activeTab !== 'write'"
+            [class.text-gray-700]="activeTab !== 'write'"
+            [class.border-gray-300]="activeTab !== 'write'"
+          >
+            Viết đánh giá
+          </button>
+        </div>
+
+        <!-- Tab Viết -->
+        <div *ngIf="activeTab === 'write'">
+          <textarea
+            [(ngModel)]="overallComment"
+            [disabled]="!!evaluation?.isLocked"
+            rows="7"
+            placeholder="Nhập nhận xét tổng kết..."
+            class="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder-gray-400 transition disabled:bg-gray-50 disabled:text-gray-500"
+          ></textarea>
+          <div class="flex justify-end mt-1">
+            <span class="text-xs text-gray-400">{{ overallComment.length }} ký tự</span>
+          </div>
+        </div>
+
+        <!-- Tab Upload -->
+        <div *ngIf="activeTab === 'upload'">
+          <div class="space-y-2 mb-3">
+            <div *ngFor="let slot of uploadSlots; let i = index" class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="triggerSlotFileInput(i)"
+                [disabled]="!!evaluation?.isLocked"
+                class="flex items-center gap-1.5 text-sm text-gray-700 border border-gray-300 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 shrink-0"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                Tải tệp
+              </button>
+              <span *ngIf="slot.file" class="text-xs text-gray-500 truncate flex-1 min-w-0">{{
+                slot.file.name
+              }}</span>
+              <button
+                type="button"
+                (click)="removeSlot(i)"
+                [disabled]="!!evaluation?.isLocked"
+                title="Xóa tệp"
+                class="ml-auto text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40 shrink-0"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <input
+                type="file"
+                class="hidden"
+                [attr.data-slot]="i"
+                (change)="onSlotFileSelected($event, i)"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="addUploadSlot()"
+            [disabled]="!!evaluation?.isLocked"
+            class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-40"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Thêm tệp khác
+          </button>
+          <div class="mt-4">
+            <textarea
+              [(ngModel)]="uploadNote"
+              [disabled]="!!evaluation?.isLocked"
+              rows="3"
+              placeholder="Thêm nhận xét..."
+              class="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder-gray-400 transition disabled:bg-gray-50"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer card -->
+      <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
+        <button
+          type="button"
+          (click)="saveDraft()"
+          [disabled]="!!evaluation?.isLocked || isSaving"
+          class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-40"
+        >
+          <svg
+            *ngIf="!isSaving"
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+          <svg
+            *ngIf="isSaving"
+            class="w-4 h-4 animate-spin text-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            ></path>
+          </svg>
+        </button>
+        <div class="flex items-center gap-2">
+          <button
+            *ngIf="evaluation?.isLocked"
+            type="button"
+            (click)="openResetConfirm()"
+            [disabled]="isResetting"
+            class="px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {{ isResetting ? 'Đang mở khóa...' : 'Đánh giá lại' }}
+          </button>
+          <button
+            type="button"
+            (click)="exportReport()"
+            [disabled]="isExporting || !evaluation"
+            class="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {{ isExporting ? 'Đang xuất...' : 'Xuất file' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mentor actions -->
+    <div *ngIf="!evaluation?.isLocked" class="flex justify-end">
+      <button
+        type="button"
+        (click)="openSubmitConfirm()"
+        [disabled]="!canSubmit() || isSubmitting"
+        class="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+      >
+        <svg *ngIf="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
+        </svg>
+        {{ isSubmitting ? 'Đang gửi...' : 'Gửi phê duyệt' }}
+      </button>
+    </div>
+    <div *ngIf="evaluation?.isLocked" class="flex justify-end">
+      <span
+        class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 text-green-700 text-sm font-medium rounded-lg"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        Đã gửi phê duyệt lúc {{ evaluation?.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
+      </span>
+    </div>
+  </ng-container>
+
+  <!-- Placeholder -->
+  <div
+    *ngIf="!isLoading && !selectedInternId"
+    class="flex flex-col items-center justify-center py-24 text-gray-400"
+  >
+    <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1"
+        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+    <p class="text-base font-medium">Chọn intern để bắt đầu đánh giá</p>
+    <p class="text-sm mt-1">Sử dụng dropdown phía trên để tiếp tục</p>
+  </div>
+
+  <!-- Modal Submit Mentor -->
+  <div *ngIf="showSubmitModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" (click)="showSubmitModal = false"></div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 z-10">
+      <h3 class="text-base font-semibold text-gray-900 mb-3">Xác nhận gửi phê duyệt</h3>
+      <p class="text-sm text-gray-500 mb-5">
+        Sau khi gửi bạn không thể chỉnh sửa thêm. Hành động này không thể hoàn tác.
+      </p>
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="showSubmitModal = false"
+          class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
+        >
+          Hủy
+        </button>
+        <button
+          type="button"
+          (click)="submitEvaluation()"
+          class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+        >
+          Xác nhận gửi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reset Mentor -->
+  <div *ngIf="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" (click)="showResetModal = false"></div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 z-10">
+      <h3 class="text-base font-semibold text-gray-900 mb-3">Xác nhận đánh giá lại</h3>
+      <p class="text-sm text-gray-500 mb-5">
+        Hành động này sẽ <strong>mở khóa đánh giá</strong> và cho phép chỉnh sửa lại.
+      </p>
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="showResetModal = false"
+          class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
+        >
+          Hủy
+        </button>
+        <button
+          type="button"
+          (click)="confirmReset()"
+          class="px-5 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg"
+        >
+          Xác nhận mở khóa
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     MANAGER VIEW — MỚI
+════════════════════════════════════════════════════════════════════════════ -->
+<ng-container *ngIf="currentRole === 'MANAGER'">
+  <!-- Page Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Phê duyệt kết quả thực tập</h1>
+    <p class="text-sm text-gray-500 mt-1">Xem xét đánh giá của Mentor và ra quyết định nhân sự</p>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="flex border-b border-gray-200 mb-5">
+    <button
+      (click)="switchManagerTab('pending')"
+      class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium border-b-2 transition-colors"
+      [class.border-blue-600]="managerTab === 'pending'"
+      [class.text-blue-600]="managerTab === 'pending'"
+      [class.border-transparent]="managerTab !== 'pending'"
+      [class.text-gray-500]="managerTab !== 'pending'"
+    >
+      Chờ duyệt
+      <span
+        class="px-1.5 py-0.5 text-[11px] rounded-full font-medium"
+        [class.bg-blue-100]="managerTab === 'pending'"
+        [class.text-blue-700]="managerTab === 'pending'"
+        [class.bg-gray-100]="managerTab !== 'pending'"
+        [class.text-gray-500]="managerTab !== 'pending'"
+      >
+        {{ pendingReviews.length }}
+      </span>
+    </button>
+    <button
+      (click)="switchManagerTab('all')"
+      class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium border-b-2 transition-colors"
+      [class.border-blue-600]="managerTab === 'all'"
+      [class.text-blue-600]="managerTab === 'all'"
+      [class.border-transparent]="managerTab !== 'all'"
+      [class.text-gray-500]="managerTab !== 'all'"
+    >
+      Tất cả hồ sơ
+    </button>
+  </div>
+
+  <!-- 2-col layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
+    <!-- LEFT: Danh sách -->
+    <div>
+      <div *ngIf="isManagerListLoading" class="flex justify-center py-10">
+        <div
+          class="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
+        ></div>
+      </div>
+
+      <div
+        *ngIf="!isManagerListLoading && currentManagerReviews.length === 0"
+        class="flex flex-col items-center py-16 text-gray-400"
+      >
+        <svg
+          class="w-12 h-12 mb-3 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="text-sm font-medium">
+          {{ managerTab === 'pending' ? 'Không có hồ sơ nào chờ duyệt' : 'Chưa có hồ sơ nào' }}
+        </p>
+      </div>
+
+      <div class="space-y-2.5">
+        <div
+          *ngFor="let r of currentManagerReviews"
+          (click)="selectManagerReview(r)"
+          class="bg-white border rounded-xl p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm"
+          [class.border-blue-500]="selectedReview?.internshipProfileId === r.internshipProfileId"
+          [class.shadow-sm]="selectedReview?.internshipProfileId === r.internshipProfileId"
+          [class.border-gray-200]="selectedReview?.internshipProfileId !== r.internshipProfileId"
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <div
+              class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-semibold shrink-0"
+            >
+              {{ getInitials(r.internName) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-semibold text-gray-800 truncate">{{ r.internName }}</p>
+              <p class="text-xs text-gray-400 truncate">{{ r.internEmail }}</p>
+            </div>
+            <span
+              *ngIf="r.currentDecision"
+              class="text-[11px] px-2 py-0.5 rounded-full font-medium border shrink-0"
+              [ngClass]="getDecisionBadgeClass(r.currentDecision.decision)"
+            >
+              {{ getDecisionLabel(r.currentDecision.decision) }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5">
+            <svg
+              class="w-3.5 h-3.5 text-gray-400 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            <span class="truncate">{{ r.positionName || 'Chưa có vị trí' }}</span>
+          </div>
+
+          <div *ngIf="r.totalTasksReviewed > 0" class="flex items-center gap-2 mt-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-1.5">
+              <div
+                class="h-1.5 rounded-full transition-all"
+                [style.width.%]="getProgressPct(r.overallScore)"
+                [style.background-color]="getManagerScoreColor(r.overallScore)"
+              ></div>
+            </div>
+            <span
+              class="text-xs font-semibold shrink-0"
+              [style.color]="getManagerScoreColor(r.overallScore)"
+            >
+              {{ r.overallScore | number: '1.1-1' }}/10
+            </span>
+          </div>
+          <p *ngIf="r.totalTasksReviewed === 0" class="text-xs text-gray-400 italic mt-1.5">
+            Chưa có task được chấm
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Chi tiết hồ sơ -->
+    <div>
+      <!-- Placeholder -->
+      <div
+        *ngIf="!selectedReview"
+        class="flex flex-col items-center justify-center py-24 text-gray-400 bg-white rounded-xl border border-gray-200"
+      >
+        <svg
+          class="w-14 h-14 mb-4 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="text-base font-medium">Chọn một hồ sơ để xem chi tiết</p>
+        <p class="text-sm mt-1">Nhấn vào thẻ intern ở bên trái</p>
+      </div>
+
+      <!-- Loading -->
+      <div
+        *ngIf="selectedReview && isReviewDetailLoading"
+        class="flex justify-center py-20 bg-white rounded-xl border border-gray-200"
+      >
+        <div
+          class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+        ></div>
+      </div>
+
+      <!-- Detail -->
+      <div *ngIf="selectedReview && !isReviewDetailLoading" class="space-y-4">
+        <!-- Intern info -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-base font-bold shrink-0"
+              >
+                {{ getInitials(selectedReview.internName) }}
+              </div>
+              <div>
+                <h2 class="text-base font-bold text-gray-900">{{ selectedReview.internName }}</h2>
+                <p class="text-sm text-gray-500">{{ selectedReview.internEmail }}</p>
+                <p *ngIf="selectedReview.internPhone" class="text-xs text-gray-400 mt-0.5">
+                  {{ selectedReview.internPhone }}
+                </p>
+              </div>
+            </div>
+            <span
+              *ngIf="selectedReview.currentDecision"
+              class="text-sm px-3 py-1 rounded-full font-semibold border"
+              [ngClass]="getDecisionBadgeClass(selectedReview.currentDecision.decision)"
+            >
+              {{ getDecisionLabel(selectedReview.currentDecision.decision) }}
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+            <div class="bg-gray-50 rounded-lg px-3 py-2">
+              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Vị trí</p>
+              <p class="text-sm text-gray-700 font-medium truncate mt-0.5">
+                {{ selectedReview.positionName || '—' }}
+              </p>
+            </div>
+            <div class="bg-gray-50 rounded-lg px-3 py-2">
+              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                Phòng ban
+              </p>
+              <p class="text-sm text-gray-700 font-medium truncate mt-0.5">
+                {{ selectedReview.departmentName || '—' }}
+              </p>
+            </div>
+            <div class="bg-gray-50 rounded-lg px-3 py-2">
+              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ngành</p>
+              <p class="text-sm text-gray-700 font-medium truncate mt-0.5">
+                {{ selectedReview.major || '—' }}
+              </p>
+            </div>
+            <div class="bg-gray-50 rounded-lg px-3 py-2">
+              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Trường</p>
+              <p class="text-sm text-gray-700 font-medium truncate mt-0.5">
+                {{ selectedReview.universityName || '—' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bảng điểm kỹ năng -->
+        <div class="bg-white rounded-xl border border-gray-200">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-gray-700">Tổng điểm kỹ năng</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-400"
+                >{{ selectedReview.totalTasksReviewed }}/{{ selectedReview.totalTasksAll }} task đã
+                chấm</span
+              >
+              <span
+                class="text-sm font-bold"
+                [style.color]="getManagerScoreColor(selectedReview.overallScore)"
+              >
+                {{ selectedReview.overallScore | number: '1.1-2' }}/10
+              </span>
+            </div>
+          </div>
+          <div
+            *ngIf="!selectedReview.skillSummaries.length"
+            class="py-10 text-center text-gray-400 text-sm"
+          >
+            Chưa có dữ liệu kỹ năng
+          </div>
+          <div *ngIf="selectedReview.skillSummaries.length" class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                  <th
+                    class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                  >
+                    Kỹ năng
+                  </th>
+                  <th
+                    class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                  >
+                    Task
+                  </th>
+                  <th
+                    class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                  >
+                    Trọng số
+                  </th>
+                  <th
+                    class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                  >
+                    Điểm TB
+                  </th>
+                  <th class="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Mức độ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let skill of selectedReview.skillSummaries"
+                  class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
+                >
+                  <td class="px-5 py-3">
+                    <p class="font-medium text-gray-800">{{ skill.skillName }}</p>
+                    <p *ngIf="skill.parentSkillName" class="text-xs text-gray-400 mt-0.5">
+                      {{ skill.parentSkillName }}
+                    </p>
+                  </td>
+                  <td class="px-4 py-3 text-center text-gray-600">{{ skill.taskCount }}</td>
+                  <td class="px-4 py-3 text-center text-gray-600">{{ skill.totalWeight }}</td>
+                  <td class="px-4 py-3 text-center">
+                    <span
+                      class="font-semibold"
+                      [style.color]="getManagerScoreColor(skill.averageScore)"
+                    >
+                      {{ skill.averageScore | number: '1.1-2' }}/10
+                    </span>
+                  </td>
+                  <td class="px-5 py-3">
+                    <div class="flex items-center gap-2">
+                      <div class="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[80px]">
+                        <div
+                          class="h-1.5 rounded-full"
+                          [style.width.%]="getProgressPct(skill.averageScore)"
+                          [style.background-color]="getManagerScoreColor(skill.averageScore)"
+                        ></div>
+                      </div>
+                      <span class="text-xs text-gray-400">{{
+                        getScoreLabel(skill.averageScore)
+                      }}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Nhận xét Mentor -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-700">Nhận xét của Mentor</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-500">{{ selectedReview.mentorName }}</span>
+              <span
+                class="text-[11px] px-2 py-0.5 rounded-full font-medium"
+                [class.bg-blue-50]="selectedReview.evaluationStatus === 'SUBMITTED'"
+                [class.text-blue-700]="selectedReview.evaluationStatus === 'SUBMITTED'"
+                [class.bg-gray-100]="selectedReview.evaluationStatus !== 'SUBMITTED'"
+                [class.text-gray-500]="selectedReview.evaluationStatus !== 'SUBMITTED'"
+              >
+                {{ selectedReview.evaluationStatus === 'SUBMITTED' ? 'Đã gửi' : 'Bản nháp' }}
+              </span>
+            </div>
+          </div>
+          <div
+            *ngIf="selectedReview.overallComment"
+            class="bg-gray-50 rounded-xl px-4 py-3.5 text-sm text-gray-700 leading-relaxed border border-gray-100 whitespace-pre-wrap"
+          >
+            {{ selectedReview.overallComment }}
+          </div>
+          <p *ngIf="!selectedReview.overallComment" class="text-sm text-gray-400 italic">
+            Mentor chưa có nhận xét
+          </p>
+          <p *ngIf="selectedReview.evaluationSubmittedAt" class="text-xs text-gray-400 mt-2">
+            Gửi lúc {{ selectedReview.evaluationSubmittedAt | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+
+        <!-- Lịch sử thực thi -->
+        <div class="bg-white rounded-xl border border-gray-200">
+          <button
+            type="button"
+            (click)="toggleTask(-1)"
+            class="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+          >
+            <h3 class="text-sm font-semibold text-gray-700">
+              Lịch sử thực thi
+              <span class="ml-1 text-xs font-normal text-gray-400"
+                >({{ selectedReview.taskHistory.length }} task)</span
+              >
+            </h3>
+            <svg
+              class="w-4 h-4 text-gray-400 transition-transform"
+              [class.rotate-180]="isTaskExpanded(-1)"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          <div *ngIf="isTaskExpanded(-1)" class="border-t border-gray-100">
+            <div
+              *ngIf="!selectedReview.taskHistory.length"
+              class="py-8 text-center text-gray-400 text-sm"
+            >
+              Chưa có task nào
+            </div>
+            <div
+              *ngFor="let task of selectedReview.taskHistory"
+              class="border-b border-gray-50 last:border-0"
+            >
+              <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                <button
+                  type="button"
+                  (click)="toggleTask(task.taskId)"
+                  class="p-1 text-gray-400 hover:text-gray-600 shrink-0"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 transition-transform"
+                    [class.rotate-90]="isTaskExpanded(task.taskId)"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-medium text-gray-800 truncate">{{ task.title }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">
+                    Deadline: {{ task.deadline | date: 'dd/MM/yyyy' }}
+                  </p>
+                </div>
+                <span
+                  class="text-[11px] px-2.5 py-0.5 rounded-full font-medium shrink-0"
+                  [ngClass]="getTaskStatusClass(task.status)"
+                >
+                  {{ getTaskStatusLabel(task.status) }}
+                </span>
+              </div>
+              <!-- Skills của task -->
+              <div
+                *ngIf="isTaskExpanded(task.taskId) && task.skills.length"
+                class="px-12 pb-3 space-y-1.5"
+              >
+                <div
+                  *ngFor="let s of task.skills"
+                  class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs"
+                >
+                  <div>
+                    <span class="font-medium text-gray-700">{{ s.skillName }}</span>
+                    <span class="text-gray-400 ml-1.5">weight: {{ s.weight }}</span>
+                  </div>
+                  <div class="text-right">
+                    <span
+                      *ngIf="s.ratingScore !== null"
+                      class="font-bold"
+                      [style.color]="getManagerScoreColor(s.ratingScore)"
+                    >
+                      {{ s.ratingScore }}/10
+                    </span>
+                    <span *ngIf="s.ratingScore === null" class="text-gray-400 italic"
+                      >Chưa chấm</span
+                    >
+                    <p
+                      *ngIf="s.reviewComment"
+                      class="text-gray-500 italic mt-0.5 max-w-[200px] text-right"
+                    >
+                      "{{ s.reviewComment }}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quyết định hiện tại -->
+        <div
+          *ngIf="selectedReview.currentDecision"
+          class="rounded-xl border p-5"
+          [class.bg-green-50]="selectedReview.currentDecision.decision === 'PASS'"
+          [class.border-green-200]="selectedReview.currentDecision.decision === 'PASS'"
+          [class.bg-red-50]="selectedReview.currentDecision.decision === 'FAIL'"
+          [class.border-red-200]="selectedReview.currentDecision.decision === 'FAIL'"
+          [class.bg-purple-50]="selectedReview.currentDecision.decision === 'CONVERT_TO_STAFF'"
+          [class.border-purple-200]="selectedReview.currentDecision.decision === 'CONVERT_TO_STAFF'"
+        >
+          <p class="text-sm font-semibold text-gray-800">
+            Quyết định:
+            <span class="font-bold">{{
+              getDecisionLabel(selectedReview.currentDecision.decision)
+            }}</span>
+          </p>
+          <p
+            *ngIf="selectedReview.currentDecision.managerComment"
+            class="text-sm text-gray-600 mt-1"
+          >
+            {{ selectedReview.currentDecision.managerComment }}
+          </p>
+          <p class="text-xs text-gray-400 mt-1.5">
+            Bởi {{ selectedReview.currentDecision.managerName }} ·
+            {{ selectedReview.currentDecision.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+            <span *ngIf="selectedReview.currentDecision.hrNotified" class="ml-2 text-green-600"
+              >· Đã thông báo HR</span
+            >
+          </p>
+        </div>
+
+        <!-- Action buttons -->
+        <div
+          *ngIf="canManagerDecide(selectedReview)"
+          class="bg-white rounded-xl border border-gray-200 px-5 py-4"
+        >
+          <p class="text-sm font-semibold text-gray-700 mb-3">Quyết định của Manager</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              (click)="openManagerDecisionNew('PASS')"
+              class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Đạt (Pass)
+            </button>
+            <button
+              type="button"
+              (click)="openManagerDecisionNew('CONVERT_TO_STAFF')"
+              class="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
+              </svg>
+              Tuyển dụng chính thức
+            </button>
+            <button
+              type="button"
+              (click)="openManagerDecisionNew('FAIL')"
+              class="flex items-center gap-2 px-5 py-2.5 border border-red-300 text-red-600 bg-white hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Không đạt (Fail)
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mt-3">
+            Sau khi xác nhận, hệ thống sẽ tự động thông báo kết quả cho tất cả HR.
+          </p>
+        </div>
+
+        <!-- Warning chưa submit -->
+        <div
+          *ngIf="selectedReview.evaluationStatus !== 'SUBMITTED' && !selectedReview.currentDecision"
+          class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3"
+        >
+          <svg
+            class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <p class="text-sm text-amber-700">
+            Mentor chưa gửi phê duyệt. Bạn chỉ có thể ra quyết định sau khi Mentor submit đánh giá
+            cuối kỳ.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal quyết định Manager -->
+  <div *ngIf="showDecisionModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" (click)="closeDecisionModal()"></div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 z-10">
+      <div class="flex items-start gap-3 mb-5">
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          [class.bg-green-100]="pendingDecision === 'PASS'"
+          [class.bg-red-100]="pendingDecision === 'FAIL'"
+          [class.bg-purple-100]="pendingDecision === 'CONVERT_TO_STAFF'"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            [class.text-green-600]="pendingDecision === 'PASS'"
+            [class.text-red-600]="pendingDecision === 'FAIL'"
+            [class.text-purple-600]="pendingDecision === 'CONVERT_TO_STAFF'"
+          >
+            <path
+              *ngIf="pendingDecision === 'PASS'"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+            <path
+              *ngIf="pendingDecision === 'FAIL'"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+            <path
+              *ngIf="pendingDecision === 'CONVERT_TO_STAFF'"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-gray-900">
+            Xác nhận: {{ getDecisionLabel(pendingDecision) }}
+          </h3>
+          <p class="text-sm text-gray-500 mt-0.5">
+            Intern: <strong class="text-gray-700">{{ selectedReview?.internName }}</strong>
+          </p>
+          <p class="text-sm text-gray-500 mt-0.5">
+            Sau khi xác nhận, tất cả HR sẽ nhận thông báo ngay lập tức.
+          </p>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+          Nhận xét
+          <span *ngIf="pendingDecision === 'FAIL'" class="text-red-500 ml-0.5">*</span>
+          <span *ngIf="pendingDecision !== 'FAIL'" class="text-gray-400 ml-1">(tùy chọn)</span>
+        </label>
+        <textarea
+          [(ngModel)]="managerComment"
+          rows="3"
+          [placeholder]="
+            pendingDecision === 'FAIL'
+              ? 'Vui lòng nêu lý do không đạt...'
+              : 'Nhận xét thêm (tùy chọn)...'
+          "
+          class="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder-gray-400 transition"
+        >
+        </textarea>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="closeDecisionModal()"
+          class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
+        >
+          Hủy
+        </button>
+        <button
+          type="button"
+          (click)="confirmDecision()"
+          [disabled]="
+            (pendingDecision === 'FAIL' && !managerComment.trim()) || isSubmittingDecision
+          "
+          class="px-5 py-2 text-sm font-semibold text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+          [class.bg-green-600]="pendingDecision === 'PASS'"
+          [class.hover:bg-green-700]="pendingDecision === 'PASS'"
+          [class.bg-red-600]="pendingDecision === 'FAIL'"
+          [class.hover:bg-red-700]="pendingDecision === 'FAIL'"
+          [class.bg-purple-600]="pendingDecision === 'CONVERT_TO_STAFF'"
+          [class.hover:bg-purple-700]="pendingDecision === 'CONVERT_TO_STAFF'"
+        >
+          <svg
+            *ngIf="isSubmittingDecision"
+            class="w-4 h-4 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            ></path>
+          </svg>
+          {{ isSubmittingDecision ? 'Đang gửi...' : 'Xác nhận' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>

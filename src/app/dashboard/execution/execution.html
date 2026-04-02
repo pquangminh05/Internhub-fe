@@ -1,0 +1,885 @@
+<!-- Page Header -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Quản lý Nhiệm vụ</h1>
+  <p class="text-sm text-gray-500 mt-1">Nhiệm vụ của tôi</p>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading" class="flex items-center justify-center py-20">
+  <div class="flex flex-col items-center gap-3">
+    <div
+      class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"
+    ></div>
+    <p class="text-gray-500 text-sm">Đang tải nhiệm vụ...</p>
+  </div>
+</div>
+
+<!-- Error State -->
+<div
+  *ngIf="!isLoading && errorMessage"
+  class="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3"
+>
+  <svg
+    aria-hidden="true"
+    class="w-5 h-5 text-red-500 mt-0.5 shrink-0"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+  <div>
+    <p class="text-red-700 font-medium text-sm">{{ errorMessage }}</p>
+    <button
+      type="button"
+      (click)="loadTasks()"
+      class="mt-2 text-sm text-red-600 underline hover:no-underline"
+    >
+      Thử lại
+    </button>
+  </div>
+</div>
+
+<!-- Content -->
+<div *ngIf="!isLoading && !errorMessage" class="space-y-5">
+  <!-- ===== NHIỆM VỤ HIỆN TẠI ===== -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+    <button
+      type="button"
+      (click)="activeExpanded = !activeExpanded"
+      class="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+    >
+      <div class="flex items-center gap-2">
+        <svg
+          aria-hidden="true"
+          class="w-4 h-4 text-gray-500 transition-transform duration-200"
+          [class.rotate-0]="activeExpanded"
+          [class.-rotate-90]="!activeExpanded"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+        <span class="font-semibold text-gray-800">Nhiệm vụ hiện tại</span>
+        <span class="ml-1 bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">{{
+          activeTasks.length
+        }}</span>
+      </div>
+    </button>
+
+    <div *ngIf="activeExpanded" class="border-t border-gray-100">
+      <div *ngIf="activeTasks.length === 0" class="py-12 text-center text-gray-400">
+        <svg
+          aria-hidden="true"
+          class="w-12 h-12 mx-auto mb-3 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
+        </svg>
+        <p class="text-sm">Chưa có nhiệm vụ nào</p>
+      </div>
+
+      <ng-container *ngFor="let task of activeTasks">
+        <div
+          class="grid grid-cols-[1fr_auto_auto_auto] items-center px-6 py-4 border-b border-gray-50 hover:bg-gray-50 transition-colors gap-4"
+        >
+          <div class="min-w-0">
+            <p class="font-medium text-gray-800 text-sm truncate">{{ task.title }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              <span *ngIf="task.mentorName">Mentor: {{ task.mentorName }}</span>
+              <span *ngIf="!task.mentorName" class="italic">Chưa có mentor</span>
+            </p>
+          </div>
+          <div
+            class="text-xs whitespace-nowrap"
+            [class.text-red-500]="isOverdue(task.deadline)"
+            [class.text-gray-500]="!isOverdue(task.deadline)"
+          >
+            {{ formatDeadline(task.deadline) }}
+          </div>
+          <span class="task-status-badge" [ngClass]="getStatusClass(task.status)">
+            {{ getStatusLabel(task.status) }}
+          </span>
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              (click)="openDetailModal(task, $event)"
+              class="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              Chi tiết
+            </button>
+            <button
+              *ngIf="canSubmit(task.status)"
+              type="button"
+              (click)="openSubmitModal(task, $event)"
+              class="submit-btn"
+            >
+              Nộp bài
+            </button>
+            <span
+              *ngIf="task.status === 'Submitted'"
+              class="text-xs text-blue-600 font-medium whitespace-nowrap"
+              >Chờ đánh giá</span
+            >
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ===== NHIỆM VỤ ĐÃ HOÀN THÀNH ===== -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+    <button
+      type="button"
+      (click)="completedExpanded = !completedExpanded"
+      class="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+    >
+      <div class="flex items-center gap-2">
+        <svg
+          aria-hidden="true"
+          class="w-4 h-4 text-gray-500 transition-transform duration-200"
+          [class.rotate-0]="completedExpanded"
+          [class.-rotate-90]="!completedExpanded"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+        <span class="font-semibold text-gray-800">Nhiệm vụ Đã Hoàn Thành</span>
+        <span
+          class="ml-1 bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full"
+          >{{ completedTasks.length }}</span
+        >
+      </div>
+    </button>
+
+    <div *ngIf="completedExpanded" class="border-t border-gray-100">
+      <div *ngIf="completedTasks.length === 0" class="py-12 text-center text-gray-400">
+        <p class="text-sm">Chưa có nhiệm vụ nào hoàn thành</p>
+      </div>
+      <ng-container *ngFor="let task of completedTasks">
+        <div
+          class="grid grid-cols-[1fr_auto_auto_auto] items-center px-6 py-4 border-b border-gray-50 hover:bg-gray-50 transition-colors gap-4"
+        >
+          <div class="min-w-0">
+            <p class="font-medium text-gray-800 text-sm truncate">{{ task.title }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              <span *ngIf="task.mentorName">Mentor: {{ task.mentorName }}</span>
+            </p>
+          </div>
+          <div class="text-xs text-gray-500 whitespace-nowrap">
+            {{ formatDeadline(task.deadline) }}
+          </div>
+          <span class="task-status-badge" [ngClass]="getStatusClass(task.status)">{{
+            getStatusLabel(task.status)
+          }}</span>
+          <button
+            type="button"
+            (click)="openDetailModal(task, $event)"
+            class="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            Kết quả
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL CHI TIẾT TASK ===== -->
+<div
+  *ngIf="isDetailModalOpen"
+  class="fixed inset-0 z-50 flex justify-end"
+  (click)="closeDetailModal()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="detail-modal-title"
+>
+  <div
+    class="relative bg-white shadow-2xl w-full max-w-lg h-[calc(100vh-5rem)] mt-20 overflow-hidden flex flex-col drawer-anim-right"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div
+      class="px-6 py-4 border-b border-surface-50 flex items-center justify-between flex-shrink-0 bg-white sticky top-0 z-10"
+    >
+      <h2 id="detail-modal-title" class="text-base font-bold text-gray-900">Chi tiết Nhiệm vụ</h2>
+      <button
+        type="button"
+        (click)="closeDetailModal()"
+        aria-label="Đóng"
+        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingDetail" class="flex items-center justify-center py-12">
+      <div
+        class="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"
+      ></div>
+      <span class="ml-3 text-sm text-gray-500">Đang tải...</span>
+    </div>
+
+    <!-- Nội dung -->
+    <div
+      *ngIf="!isLoadingDetail && selectedTaskDetail"
+      class="overflow-y-auto flex-1 custom-scrollbar"
+    >
+      <div class="px-6 py-5 space-y-6">
+        <!-- 1. Tiêu đề + Trạng thái -->
+        <div class="flex items-start justify-between gap-3">
+          <h3 class="text-lg font-bold text-gray-900 leading-tight">
+            {{ selectedTaskDetail.title }}
+          </h3>
+          <span
+            class="task-status-badge flex-shrink-0 mt-0.5"
+            [ngClass]="getStatusClass(selectedTaskDetail.status)"
+          >
+            {{ getStatusLabel(selectedTaskDetail.status) }}
+          </span>
+        </div>
+
+        <!-- 2. Mô tả -->
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Mô tả</p>
+          <div
+            class="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-4 py-3 min-h-[52px] whitespace-pre-wrap"
+          >
+            {{ selectedTaskDetail.description || 'Không có mô tả.' }}
+          </div>
+        </div>
+
+        <!-- 3. Deadline + Mentor -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-xl px-4 py-3">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+              Deadline
+            </p>
+            <p
+              class="text-sm font-semibold flex items-center gap-1.5"
+              [class.text-red-600]="
+                isOverdue(selectedTaskDetail.deadline) && selectedTaskDetail.status !== 'Reviewed'
+              "
+              [class.text-gray-800]="
+                !isOverdue(selectedTaskDetail.deadline) || selectedTaskDetail.status === 'Reviewed'
+              "
+            >
+              <svg
+                class="w-3.5 h-3.5 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              {{ formatDeadline(selectedTaskDetail.deadline) }}
+            </p>
+            <p
+              *ngIf="
+                isOverdue(selectedTaskDetail.deadline) && selectedTaskDetail.status !== 'Reviewed'
+              "
+              class="text-xs text-red-400 mt-0.5"
+            >
+              Đã quá hạn
+            </p>
+          </div>
+          <div class="bg-gray-50 rounded-xl px-4 py-3">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+              Mentor phụ trách
+            </p>
+            <p class="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+              <svg
+                class="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              {{ selectedTaskDetail.mentorName || '—' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- 4. Ngày giao + Độ khó -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-xl px-4 py-3">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+              Ngày giao
+            </p>
+            <p class="text-sm text-gray-700">{{ formatDeadline(selectedTaskDetail.createdAt) }}</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl px-4 py-3">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Độ khó</p>
+            <ng-container
+              *ngIf="
+                selectedTaskDetail.skills &&
+                  selectedTaskDetail.skills.length > 0 &&
+                  selectedTaskDetail.skills[0].weight;
+                else noWeight
+              "
+            >
+              <div class="flex items-center gap-0.5">
+                <span
+                  *ngFor="let s of getStarArray(selectedTaskDetail.skills[0].weight)"
+                  class="text-yellow-400 text-lg leading-none"
+                  >★</span
+                >
+                <span
+                  *ngFor="let s of getEmptyStarArray(selectedTaskDetail.skills[0].weight)"
+                  class="text-gray-300 text-lg leading-none"
+                  >★</span
+                >
+              </div>
+              <p class="text-xs text-gray-500 mt-1">
+                {{ getDifficultyLabel(selectedTaskDetail.skills[0].weight) }}
+                ({{ selectedTaskDetail.skills[0].weight }}/5)
+              </p>
+            </ng-container>
+            <ng-template #noWeight>
+              <p class="text-sm text-gray-400 italic">Chưa xác định</p>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- 5. Kỹ năng yêu cầu -->
+        <div *ngIf="selectedTaskDetail.skills && selectedTaskDetail.skills.length > 0">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            Kỹ năng yêu cầu
+          </p>
+          <div class="space-y-2">
+            <div
+              *ngFor="let skill of selectedTaskDetail.skills"
+              class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 gap-3"
+            >
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div
+                  class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-4 h-4 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-gray-800 truncate">{{ skill.skillName }}</p>
+                  <div *ngIf="skill.weight" class="flex items-center gap-0.5 mt-0.5">
+                    <span
+                      *ngFor="let s of getStarArray(skill.weight)"
+                      class="text-yellow-400 text-xs"
+                      >★</span
+                    >
+                    <span
+                      *ngFor="let s of getEmptyStarArray(skill.weight)"
+                      class="text-gray-300 text-xs"
+                      >★</span
+                    >
+                    <span class="text-xs text-gray-400 ml-1">Trọng số {{ skill.weight }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <ng-container *ngIf="skill.ratingScore !== null && skill.ratingScore !== undefined">
+                  <span class="text-base font-bold" [style]="getScoreColor(skill.ratingScore)">
+                    {{ skill.ratingScore }}/10
+                  </span>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ getScoreLabel(skill.ratingScore) }}</p>
+                  <p
+                    *ngIf="skill.reviewComment"
+                    class="text-xs text-gray-500 mt-1 max-w-[130px] text-right italic"
+                  >
+                    "{{ skill.reviewComment }}"
+                  </p>
+                </ng-container>
+                <span
+                  *ngIf="skill.ratingScore === null || skill.ratingScore === undefined"
+                  class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full"
+                  >Chưa chấm</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Bài nộp -->
+        <div
+          *ngIf="
+            selectedTaskDetail.status === 'Submitted' ||
+            selectedTaskDetail.status === 'Reviewed' ||
+            selectedTaskDetail.submissionLink
+          "
+        >
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            Bài nộp của bạn
+          </p>
+          <div class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 space-y-2">
+            <a
+              *ngIf="selectedTaskDetail.submissionLink"
+              [href]="selectedTaskDetail.submissionLink"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors break-all font-medium"
+            >
+              <svg
+                class="w-4 h-4 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              {{ selectedTaskDetail.submissionLink }}
+            </a>
+            <p *ngIf="!selectedTaskDetail.submissionLink" class="text-sm text-gray-500 italic">
+              Chưa có link minh chứng.
+            </p>
+            <div *ngIf="selectedTaskDetail.submissionNote" class="pt-1.5 border-t border-blue-100">
+              <p class="text-xs font-semibold text-gray-500 mb-0.5">Ghi chú khi nộp:</p>
+              <p class="text-xs text-gray-600 leading-relaxed">
+                {{ selectedTaskDetail.submissionNote }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Hoàn thành (không có skills chi tiết) -->
+        <div
+          *ngIf="
+            selectedTaskDetail.status === 'Reviewed' &&
+            (!selectedTaskDetail.skills || selectedTaskDetail.skills.length === 0)
+          "
+          class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3"
+        >
+          <svg
+            class="w-4 h-4 text-green-600 flex-shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p class="text-sm font-semibold text-green-800">
+            Mentor đã đánh giá hoàn thành nhiệm vụ này.
+          </p>
+        </div>
+
+        <!-- 8. Bị từ chối -->
+        <div
+          *ngIf="selectedTaskDetail.status === 'Rejected'"
+          class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-2"
+        >
+          <svg
+            class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <div>
+            <p class="text-sm font-semibold text-red-700">Nhiệm vụ bị từ chối</p>
+            <p class="text-xs text-red-600 mt-0.5">
+              Bạn có thể nộp lại sau khi chỉnh sửa minh chứng.
+            </p>
+          </div>
+        </div>
+
+        <div
+          *ngIf="detailError"
+          class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+        >
+          {{ detailError }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="px-6 py-4 border-t border-surface-50 bg-surface-50/50 flex justify-end gap-3 flex-shrink-0"
+    >
+      <button
+        type="button"
+        (click)="closeDetailModal()"
+        class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+      >
+        Đóng
+      </button>
+      <button
+        *ngIf="selectedTaskDetail && canSubmit(selectedTaskDetail.status)"
+        type="button"
+        (click)="openSubmitFromDetail()"
+        class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
+      >
+        Nộp bài
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL NỘP KẾT QUẢ ===== -->
+<div
+  *ngIf="isModalOpen"
+  class="fixed inset-0 z-50 flex justify-end"
+  (click)="closeModal()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-title"
+>
+  <div
+    class="relative bg-white shadow-2xl w-full max-w-lg h-[calc(100vh-5rem)] mt-20 overflow-hidden flex flex-col drawer-anim-right"
+    (click)="$event.stopPropagation()"
+  >
+    <div
+      class="px-6 py-4 border-b border-surface-50 flex items-center justify-between bg-white sticky top-0 z-10"
+    >
+      <h2 id="modal-title" class="text-lg font-bold text-gray-900">Nộp Kết Quả Công Việc</h2>
+      <button
+        type="button"
+        (click)="closeModal()"
+        aria-label="Đóng modal nộp kết quả"
+        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+      >
+        <svg
+          aria-hidden="true"
+          class="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div *ngIf="submitSuccess" class="px-6 py-10 flex flex-col items-center gap-3">
+      <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+        <svg
+          aria-hidden="true"
+          class="w-8 h-8 text-green-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2.5"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </div>
+      <p class="text-gray-800 font-semibold text-lg">Nộp bài thành công!</p>
+      <p class="text-gray-500 text-sm text-center">
+        Mentor sẽ nhận được thông báo và đánh giá kết quả của bạn.
+      </p>
+    </div>
+
+    <form
+      *ngIf="!submitSuccess"
+      [formGroup]="submissionForm"
+      (ngSubmit)="onSubmit()"
+      class="px-6 py-5 space-y-6 flex-1 overflow-y-auto custom-scrollbar"
+    >
+      <div *ngIf="selectedTask" class="bg-blue-50 rounded-lg px-4 py-3 flex items-start gap-3">
+        <svg
+          aria-hidden="true"
+          class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
+        </svg>
+        <p class="text-sm text-blue-700 font-medium">{{ selectedTask.title }}</p>
+      </div>
+
+      <div>
+        <label for="submissionNote" class="block text-sm font-medium text-gray-700 mb-2"
+          >Ghi chú cho Mentor</label
+        >
+        <textarea
+          id="submissionNote"
+          formControlName="submissionNote"
+          rows="3"
+          placeholder="Ví dụ: Mô tả các thay đổi chính..."
+          class="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder-gray-400 transition"
+        >
+        </textarea>
+      </div>
+
+      <div>
+        <label for="submissionLink" class="block text-sm font-medium text-gray-700 mb-2">
+          Link Minh chứng <span class="text-blue-500 ml-1">(Google Drive, Github, Figma, ...)</span>
+        </label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <svg
+              aria-hidden="true"
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+              />
+            </svg>
+          </div>
+          <input
+            id="submissionLink"
+            type="url"
+            formControlName="submissionLink"
+            placeholder="Chèn link vào đây"
+            aria-required="true"
+            class="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 transition"
+            [class.border-red-300]="
+              submissionForm.get('submissionLink')?.invalid &&
+              submissionForm.get('submissionLink')?.touched
+            "
+          />
+        </div>
+        <p
+          *ngIf="
+            submissionForm.get('submissionLink')?.invalid &&
+            submissionForm.get('submissionLink')?.touched
+          "
+          class="mt-1 text-xs text-red-500"
+          role="alert"
+        >
+          Link minh chứng là bắt buộc.
+        </p>
+      </div>
+
+      <div>
+        <span class="block text-sm font-medium text-gray-700 mb-2">File Minh chứng</span>
+        <div
+          *ngIf="selectedFile"
+          class="border border-green-200 bg-green-50 rounded-xl px-4 py-3 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <svg
+              aria-hidden="true"
+              class="w-8 h-8 text-green-600 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <div>
+              <p class="text-sm font-medium text-gray-800">{{ selectedFile.name }}</p>
+              <p class="text-xs text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="removeFile()"
+            aria-label="Xóa file đã chọn"
+            class="p-1 text-gray-400 hover:text-red-500 transition-colors"
+          >
+            <svg
+              aria-hidden="true"
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <label
+          *ngIf="!selectedFile"
+          for="fileInput"
+          class="upload-dropzone cursor-pointer"
+          [class.dragover]="isDragOver"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+        >
+          <svg
+            aria-hidden="true"
+            class="w-10 h-10 text-gray-400 mb-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <p class="text-sm text-gray-500">Kéo thả file vào đây hoặc bấm để chọn</p>
+          <p class="text-xs text-gray-400 mt-1">(max 20MB, supported: pdf, zip, jpg, png)</p>
+          <input
+            id="fileInput"
+            #fileInput
+            type="file"
+            accept=".pdf,.zip,.jpg,.jpeg,.png"
+            class="sr-only"
+            (change)="onFileSelected($event)"
+          />
+        </label>
+      </div>
+
+      <div
+        *ngIf="submitError"
+        class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-2"
+        role="alert"
+      >
+        <svg
+          aria-hidden="true"
+          class="w-4 h-4 text-red-500 mt-0.5 shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <p class="text-sm text-red-700">{{ submitError }}</p>
+      </div>
+    </form>
+
+    <div *ngIf="!submitSuccess" class="px-6 py-4 border-t border-surface-50 bg-surface-50/50">
+      <button
+        type="submit"
+        [disabled]="isSubmitting"
+        (click)="onSubmit()"
+        class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+      >
+        <div
+          *ngIf="isSubmitting"
+          aria-hidden="true"
+          class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+        ></div>
+        <span>{{ isSubmitting ? 'Đang nộp bài...' : 'Xác nhận nộp bài' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+.badge-red {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.badge-green {
+  background: #dcfce7;
+  color: #15803d;
+}
+.badge-yellow {
+  background: #fef9c3;
+  color: #a16207;
+}
+.badge-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.badge-purple {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+.badge-gray {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.log-row:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}

@@ -1,0 +1,176 @@
+<div class="flex flex-col h-full bg-white border-r border-surface-100 shadow-sm">
+  <!-- Logo Section -->
+  <div
+    class="flex items-center h-20 border-b border-surface-50 transition-all duration-300"
+    [class.px-6]="isSidebarVisible"
+    [class.px-0]="!isSidebarVisible"
+    [class.justify-center]="!isSidebarVisible"
+  >
+    <div class="flex items-center overflow-hidden" [class.space-x-3]="isSidebarVisible">
+      <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center">
+        <img
+          src="assets/images/interhub.jpg"
+          alt="Logo"
+          class="h-8 w-auto rounded-md object-cover"
+        />
+      </div>
+      <span class="text-xl font-bold text-gray-900 tracking-tight" *ngIf="isSidebarVisible">
+        InternHub
+      </span>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+    <div
+      class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-2"
+      *ngIf="isSidebarVisible"
+    >
+      {{ isSettingsRouteActive ? 'Settings' : 'Main Menu' }}
+    </div>
+    <ng-container
+      *ngTemplateOutlet="menuItemsTemplate; context: { items: currentMenuItems, level: 0 }"
+    ></ng-container>
+  </nav>
+
+  <!-- Bottom Section -->
+  <div class="p-4 border-t border-surface-50">
+    <a
+      *ngIf="!isSettingsRouteActive && !roleService.isIntern()"
+      [routerLink]="['/settings']"
+      class="sidebar-link"
+      [class.justify-center]="!isSidebarVisible"
+      routerLinkActive="sidebar-link-active"
+      [routerLinkActiveOptions]="{
+        paths: 'subset',
+        queryParams: 'ignored',
+        matrixParams: 'ignored',
+        fragment: 'ignored',
+      }"
+      title="Cài đặt"
+    >
+      <svg
+        class="h-6 w-6"
+        [class.mr-3]="isSidebarVisible"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+        ></path>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+        ></path>
+      </svg>
+      <span class="font-medium" *ngIf="isSidebarVisible">Cài đặt</span>
+    </a>
+  </div>
+</div>
+
+<!-- Recursive Template for Menu Items -->
+<ng-template #menuItemsTemplate let-items="items" let-level="level">
+  <ng-container *ngFor="let item of items">
+    <div class="space-y-1">
+      <!-- Link Item -->
+      <a
+        *ngIf="item.routerLink"
+        [routerLink]="item.routerLink"
+        [routerLinkActive]="['sidebar-link-active']"
+        [routerLinkActiveOptions]="getRouterLinkActiveOptions(item)"
+        class="sidebar-link group"
+        [class.justify-center]="!isSidebarVisible"
+        [class.pl-10]="level > 0 && isSidebarVisible"
+        (click)="item.children ? toggleSubMenu(item) : null"
+      >
+        <svg
+          *ngIf="item.icon"
+          class="h-5 w-5"
+          [class.mr-3]="isSidebarVisible"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            [attr.d]="item.icon"
+          ></path>
+        </svg>
+        <span class="text-sm font-medium" *ngIf="isSidebarVisible">{{ item.label }}</span>
+
+        <!-- Dropdown Arrow -->
+        <svg
+          *ngIf="item.children && isSidebarVisible"
+          class="ml-auto h-4 w-4 transition-transform duration-200"
+          [class.rotate-180]="item.expanded"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          ></path>
+        </svg>
+      </a>
+
+      <!-- Parent Toggle (No Link) -->
+      <button
+        *ngIf="!item.routerLink && item.children"
+        class="sidebar-link w-full text-left"
+        [class.justify-center]="!isSidebarVisible"
+        [class.pl-10]="level > 0 && isSidebarVisible"
+        (click)="toggleSubMenu(item)"
+      >
+        <svg
+          *ngIf="item.icon"
+          class="h-5 w-5"
+          [class.mr-3]="isSidebarVisible"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            [attr.d]="item.icon"
+          ></path>
+        </svg>
+        <span class="text-sm font-medium" *ngIf="isSidebarVisible">{{ item.label }}</span>
+        <svg
+          *ngIf="isSidebarVisible"
+          class="ml-auto h-4 w-4 transition-transform duration-200"
+          [class.rotate-180]="item.expanded"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Sub-menu -->
+      <div *ngIf="item.children && item.expanded && isSidebarVisible" class="mt-1 space-y-1">
+        <ng-container
+          *ngTemplateOutlet="menuItemsTemplate; context: { items: item.children, level: level + 1 }"
+        ></ng-container>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>
